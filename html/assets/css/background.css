@@ -1,0 +1,48 @@
+/* Background image for all pages
+   Add this <link> AFTER all other styles:
+   - Root pages:    <link rel="stylesheet" href="assets/css/background.css" />
+   - Nested pages:  <link rel="stylesheet" href="../assets/css/background.css" />
+   Place your image at assets/background.png (check the path/case).
+*/
+
+html, body {
+  height: 100%;
+  min-height: 100%;
+}
+
+/* Global site background (with subtle dark overlay for contrast) */
+body {
+  /* Override any earlier 'background' with shorthand + !important */
+  background:
+    linear-gradient(180deg, rgba(10,11,12,0.55) 0%, rgba(10,11,12,0.72) 100%),
+    url('../background.png') center center / cover no-repeat fixed !important;
+
+  /* Fallback color if the image fails */
+  background-color: #0b0c0d !important;
+
+  /* Hint that we’re a dark UI */
+  color-scheme: dark;
+}
+
+/* Extra specificity in case a page sets body background later */
+html body {
+  background:
+    linear-gradient(180deg, rgba(10,11,12,0.55) 0%, rgba(10,11,12,0.72) 100%),
+    url('../background.png') center center / cover no-repeat fixed !important;
+  background-color: #0b0c0d !important;
+}
+
+/* Disable fixed attachment on mobile to avoid repaint jank */
+@media (max-width: 768px) {
+  body, html body {
+    background-attachment: scroll !important;
+  }
+}
+
+/* Optional utility for extra contrast on any container */
+.bg-surface {
+  background: rgba(20, 21, 22, 0.85);
+  border: 1px solid rgba(37, 39, 40, 0.85);
+  border-radius: 12px;
+  backdrop-filter: saturate(1.1) blur(1px);
+}

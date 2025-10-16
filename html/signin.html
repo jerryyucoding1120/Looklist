@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LookList - Sign in</title>
+  <meta name="description" content="Access your LookList account to manage bookings and messages." />
+  <link rel="icon" href="assets/logo1.png" type="image/png" sizes="any" />
+  <link rel="apple-touch-icon" href="assets/logo1.png" />
+  <link rel="shortcut icon" href="assets/logo1.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background: linear-gradient(135deg, #131415 0%, #09090a 100%);
+      --silver: #cfd8dc;
+      --grey: #424549;
+      --dark-grey: #181a1b;
+      --black: #101112;
+      --card: #23272a;
+      --box-bg: linear-gradient(135deg, #141516 0%, #18191a 100%);
+      --text: #e0e0e0;
+      --font-header: 'Poppins', sans-serif;
+      --font-body: 'Inter', Arial, sans-serif;
+      --accent: #cfd8dc;
+      --box-border: #252728;
+      --button-bg: #23272a;
+      --button-hover-bg: transparent;
+      --button-hover-border: #cfd8dc;
+      --button-hover-text: #cfd8dc;
+      --error: #ef5350;
+      --success: #66bb6a;
+      --footer-bg: #101112;
+    }
+    html, body {
+      background: var(--background);
+      color: var(--text);
+      font-family: var(--font-body);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-size: 18px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .header-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1.1rem 2rem 1.1rem 1rem;
+      background: var(--dark-grey);
+      box-sizing: border-box;
+      gap: 1.4rem;
+      margin-bottom: 1.2rem;
+      border-bottom: 1.5px solid var(--box-border);
+    }
+    .logo-img {
+      height: 42px;
+      width: auto;
+      border-radius: 12px;
+      border: 2px solid var(--box-border);
+    }
+    .header-title {
+      font-family: var(--font-header);
+      font-size: 1.9rem;
+      font-weight: bold;
+      color: var(--silver);
+      margin-right: auto;
+      letter-spacing: 1.5px;
+    }
+    .home-link {
+      color: var(--silver);
+      font-family: var(--font-header);
+      font-weight: bold;
+      font-size: 1.18rem;
+      text-decoration: none;
+      background: var(--button-bg);
+      border: 2px solid transparent;
+      border-radius: 24px;
+      padding: 0.32em 1.25em;
+      cursor: pointer;
+      transition: color 0.18s, border-color 0.18s, background 0.18s;
+    }
+    .home-link:hover, .home-link:focus {
+      color: var(--button-hover-text);
+      background: var(--button-hover-bg);
+      border-color: var(--button-hover-border);
+    }
+    .show-mobile { display: none; }
+    .hide-mobile { display: inline-block; }
+    @media (max-width: 600px) {
+      .show-mobile { display: inline-block; }
+      .hide-mobile { display: none; }
+      .header-bar .home-link { display: none !important; }
+    }
+
+    main {
+      max-width: 420px;
+      margin: 2.5rem auto 4rem;
+      padding: 2.5rem 2rem;
+      background: var(--box-bg);
+      border-radius: 24px;
+      border: 2px solid var(--box-border);
+      box-shadow: 0 4px 32px rgba(44,46,48,0.15);
+    }
+    h1 {
+      font-family: var(--font-header);
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--silver);
+      text-align: center;
+    }
+    p.lead {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    p.helper-text {
+      text-align: center;
+      color: var(--accent);
+      margin: 0.5rem 0 0;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 500;
+      gap: 0.35rem;
+    }
+    input[type="email"],
+    input[type="password"] {
+      padding: 0.8rem 0.9rem;
+      border-radius: 12px;
+      border: 1.5px solid var(--box-border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(207,216,220,0.2);
+    }
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.95rem;
+    }
+    .remember-row label {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 400;
+    }
+    .remember-row a {
+      color: var(--silver);
+    }
+    button[type="submit"] {
+      margin-top: 0.5rem;
+      padding: 0.9rem;
+      border-radius: 24px;
+      background: var(--button-bg);
+      color: var(--silver);
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: 2px solid var(--button-hover-border);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+    }
+    button[type="submit"]:hover,
+    button[type="submit"]:focus {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-text);
+      border-color: var(--button-hover-border);
+      box-shadow: 0 6px 24px rgba(44,46,48,0.22);
+      outline: none;
+    }
+    .status {
+      min-height: 1.4rem;
+      font-size: 0.95rem;
+    }
+    .status.error { color: var(--error); }
+    .status.success { color: var(--success); }
+    .error-text {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+    footer {
+      width: 100%;
+      background: var(--footer-bg);
+      color: var(--silver);
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      margin-top: 3rem;
+      letter-spacing: 0.5px;
+      font-size: 1.05rem;
+      border-top: 1px solid var(--box-border);
+      box-shadow: 0 -2px 16px rgba(44,46,48,0.08);
+    }
+    .footer-nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .footer-btn {
+      background: none;
+      border: 2px solid transparent;
+      color: var(--silver);
+      font-family: var(--font-body);
+      font-size: 1.07rem;
+      font-weight: 500;
+      padding: 0.2em 0.7em;
+      cursor: pointer;
+      border-radius: 6px;
+      text-decoration: underline;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+    }
+    .footer-btn:hover, .footer-btn:focus {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-text);
+      border-color: var(--button-hover-border);
+      outline: none;
+      text-decoration: none;
+    }
+    .mobile-bottom-nav {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      main { margin: 1.5rem 1rem 5rem; padding: 2rem 1.4rem; }
+      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+      footer { padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom)); }
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 64px;
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) 8px;
+        background: var(--footer-bg);
+        border-top: 1px solid var(--box-border);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+      }
+      .mobile-bottom-nav .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        text-decoration: none;
+        color: var(--silver);
+        font-size: 0.72rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 64px;
+      }
+      .mobile-bottom-nav .nav-item:hover,
+      .mobile-bottom-nav .nav-item:focus {
+        color: var(--accent);
+      }
+      .mobile-bottom-nav .nav-icon {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        border-radius: 6px;
+        border: 1px solid var(--box-border);
+        background: var(--button-bg);
+      }
+    }
+    a { color: var(--silver); text-decoration: underline; transition: color 0.2s; }
+    a:hover, a:focus { color: var(--accent); text-decoration: underline; }
+  </style>
+  <link rel="stylesheet" href="assets/css/background.css"/>
+</head>
+<body>
+  <header class="header-bar">
+    <a href="index.html"><img src="assets/logo1.png" alt="LookList Logo" class="logo-img" /></a>
+    <span class="header-title">Looklist</span>
+    <a href="index.html" class="home-link hide-mobile">Home</a>
+    <a href="services.html" class="home-link nav-desktop">Services</a>
+    <a href="bookings.html" class="home-link nav-desktop">Bookings</a>
+    <a href="messages.html" class="home-link nav-desktop">Messages</a>
+    <a href="profile.html" class="home-link nav-desktop">Profile</a>
+    <a href="signin.html" class="home-link nav-desktop" aria-current="page" data-auth="signin">Sign in</a>
+    <a href="services.html" class="home-link show-mobile">Services</a>
+    <a href="bookings.html" class="home-link show-mobile">Bookings</a>
+    <a href="messages.html" class="home-link show-mobile">Messages</a>
+    <a href="profile.html" class="home-link show-mobile">Profile</a>
+  </header>
+
+  <main>
+    <h1>Sign in</h1>
+    <p class="lead">Welcome back. Enter your credentials to access your bookings and messages.</p>
+    <form id="signin-form" novalidate>
+      <label for="signin-email">Email
+        <input type="email" id="signin-email" name="email" autocomplete="email" required />
+      </label>
+      <p class="error-text" id="signin-email-error" hidden></p>
+
+      <label for="signin-password">Password
+        <input type="password" id="signin-password" name="password" autocomplete="current-password" required />
+      </label>
+      <p class="error-text" id="signin-password-error" hidden></p>
+
+      <div class="remember-row">
+        <label><input type="checkbox" id="remember-me" checked /> Remember me</label>
+        <a href="reset.html">Forgot password?</a>
+      </div>
+
+      <button type="submit">Sign in</button>
+      <p class="status" id="signin-status"></p>
+      <p class="helper-text">New to LookList? <a href="signup.html">Create an account</a></p>
+    </form>
+  </main>
+
+  <footer>
+    <nav class="footer-nav">
+      <a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
+      <a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
+      <a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
+    </nav>
+    <div>Copyright 2025 LookList. All rights reserved.</div>
+  </footer>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary">
+    <a class="nav-item" href="index.html">
+      <img class="nav-icon" src="assets/home.png" alt="" aria-hidden="true" />
+      <span class="nav-label">Home</span>
+    </a>
+    <a class="nav-item" href="services.html">
+      <img class="nav-icon" src="assets/service.png" alt="" aria-hidden="true" />
+      <span class="nav-label">Services</span>
+    </a>
+    <a class="nav-item" href="bookings.html">
+      <img class="nav-icon" src="assets/bookings.png" alt="" aria-hidden="true" />
+      <span class="nav-label">Bookings</span>
+    </a>
+    <a class="nav-item" href="messages.html">
+      <img class="nav-icon" src="assets/messages.png" alt="" aria-hidden="true" />
+      <span class="nav-label">Messages</span>
+    </a>
+    <a class="nav-item" href="profile.html">
+      <img class="nav-icon" src="assets/profile.png" alt="" aria-hidden="true" />
+      <span class="nav-label">Profile</span>
+    </a>
+  </nav>
+
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="signin-page.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
