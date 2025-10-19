@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" href="../assets/logo1.png" />
   <link rel="shortcut icon" href="../assets/logo1.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/background.css"/>
   <style>
     :root { --background: linear-gradient(135deg, #131415 0%, #09090a 100%); --silver:#cfd8dc; --dark-grey:#181a1b; --box-bg:linear-gradient(135deg,#141516 0%,#18191a 100%); --text:#e0e0e0; --font-header:'Poppins',sans-serif; --font-body:'Inter',Arial,sans-serif; --accent:#cfd8dc; --footer-bg:#101112; --box-border:#252728; --button-bg:#23272a; --button-hover-bg:transparent; --button-hover-border:#cfd8dc; --button-hover-text:#cfd8dc; --white:#fff; --focus:#90caf9; }
     html, body { background: var(--background); color: var(--text); font-family: var(--font-body); margin: 0; padding: 0; min-height: 100vh; font-size: 18px; }
@@ -25,7 +26,7 @@
       .hide-mobile { display: none; }
       .header-bar .home-link { display: none !important; }
     }
-    main { max-width: 900px; margin: 2rem auto 3rem; padding: 2rem 1.25rem; background: var(--box-bg); border-radius: 20px; border: 2px solid var(--box-border); box-shadow: 0 4px 32px rgba(44,46,48,0.15); }
+    main { max-width: 1000px; margin: 2rem auto 3rem; padding: 2rem 1.25rem; background: var(--box-bg); border-radius: 20px; border: 2px solid var(--box-border); box-shadow: 0 4px 32px rgba(44,46,48,0.15); }
     h1, h2, h3 { font-family: var(--font-header); color: var(--silver); }
     h1 { font-size: 2.1rem; margin-bottom: 1.2rem; }
     h3 { font-size: 1.2rem; margin: 1.2rem 0 .6rem; }
@@ -38,8 +39,20 @@
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(144,202,249,.15); }
     button, .button, .secondary { background: var(--button-bg); color: var(--silver); border: 2px solid var(--accent); padding: .7rem 1.1rem; border-radius: 14px; font-weight: 700; cursor: pointer; text-decoration: none; transition: .2s; }
     button:hover, .button:hover, .secondary:hover { background: var(--button-hover-bg); color: var(--button-hover-text); border-color: var(--button-hover-border); box-shadow: 0 6px 24px rgba(44,46,48,.22); }
+    .muted { opacity: .8; }
+    .danger { border-color: #ef5350; color: #ef9a9a; }
+    .success { color: #a5d6a7; }
     ul.list { list-style: none; padding: 0; margin: .5rem 0 0; }
-    ul.list li { padding: .6rem .8rem; border: 1.5px solid var(--box-border); border-radius: 12px; margin: .4rem 0; background: #141414; }
+    ul.list li { padding: .8rem .8rem; border: 1.5px solid var(--box-border); border-radius: 12px; margin: .6rem 0; background: #141414; }
+    .listing-head { display:flex; align-items: center; gap:.8rem; justify-content: space-between; }
+    .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .6rem; }
+    .thumb { position: relative; border: 1px solid var(--box-border); border-radius: 10px; overflow: hidden; background: #0f1112; }
+    .thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
+    .thumb .actions { position: absolute; right: 6px; top: 6px; display: flex; gap: 6px; }
+    .thumb .actions button { padding: .25rem .45rem; border-radius: 8px; font-size: .8rem; }
+    .upload-zone { border: 2px dashed var(--box-border); border-radius: 12px; padding: .9rem; text-align: center; background: #111214; }
+    .upload-zone.dragover { border-color: var(--focus); background: #0f1112; }
+    .hidden { display: none !important; }
     footer { width: 100%; background: var(--footer-bg); color: var(--silver); text-align: center; padding: 2rem 1rem 1rem 1rem; margin-top: 3rem; letter-spacing: .5px; font-size: 1.05rem; border-top: 1px solid var(--box-border); box-shadow: 0 -2px 16px rgba(44,46,48,0.08); }
     .footer-nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .footer-btn { background: none; border: 2px solid transparent; color: var(--silver); font-family: var(--font-body); font-size: 1.07rem; font-weight: 500; padding: .2em .7em; cursor: pointer; border-radius: 6px; transition: background .18s, color .18s, border-color .18s; text-decoration: underline; }
@@ -63,7 +76,6 @@
       footer { padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom)); }
     }
   </style>
-  <link rel="stylesheet" href="../assets/css/background.css"/>
 </head>
 <body>
   <header class="header-bar">
@@ -74,7 +86,6 @@
     <a href="../bookings.html" class="home-link nav-desktop">Bookings</a>
     <a href="../messages.html" class="home-link nav-desktop">Messages</a>
     <a href="../profile.html" class="home-link nav-desktop">Profile</a>
-    <!-- Sign in should go to customer signin, not merchant/index.html -->
     <a href="../signin.html" class="home-link nav-desktop">Sign in</a>
     <a href="../services.html" class="home-link show-mobile">Services</a>
     <a href="../bookings.html" class="home-link show-mobile">Bookings</a>
@@ -84,26 +95,30 @@
 
   <main>
     <h1>My Listings</h1>
+
     <section class="card">
-      <h3>Create Listing</h3>
+      <h3 id="form-title">Create Listing</h3>
       <form id="listing-form" class="row">
-        <div class="field" style="flex:1 1 260px;"><label>Name</label><input name="name" placeholder="Studio name" required></div>
-        <div class="field"><label>Category</label>
-          <select name="category" required>
+        <input type="hidden" name="listing_id" />
+        <div class="field" style="flex:1 1 260px;"><label for="name">Name</label><input id="name" name="name" placeholder="Studio name" required></div>
+        <div class="field"><label for="category">Category</label>
+          <select id="category" name="category" required>
             <option value="hair">Hair</option>
             <option value="henna">Henna</option>
             <option value="makeup">Makeup</option>
             <option value="nails">Nails</option>
           </select>
         </div>
-        <div class="field" style="flex:1 1 260px;"><label>Styles (comma separated)</label><input name="styles" placeholder="braids, highlights"></div>
-        <div class="field"><label>City</label><input name="city" placeholder="London"></div>
-        <div class="field"><label>Postcode</label><input name="postcode" placeholder="SE1"></div>
-        <div class="field"><label>From Price (£)</label><input name="price_from" type="number" step="0.01" placeholder="35"></div>
-        <div class="field" style="flex-basis:100%"><label>Description</label><textarea name="description" rows="3" placeholder="About your services…"></textarea></div>
-        <div class="field"><label>Active</label><input type="checkbox" name="active" checked></div>
-        <button class="button">Create</button>
+        <div class="field" style="flex:1 1 260px;"><label for="styles">Styles (comma separated)</label><input id="styles" name="styles" placeholder="braids, highlights"></div>
+        <div class="field"><label for="city">City</label><input id="city" name="city" placeholder="London"></div>
+        <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" placeholder="SE1"></div>
+        <div class="field"><label for="price_from">From Price (£)</label><input id="price_from" name="price_from" type="number" step="0.01" placeholder="35"></div>
+        <div class="field" style="flex-basis:100%"><label for="description">Description</label><textarea id="description" name="description" rows="3" placeholder="About your services…"></textarea></div>
+        <div class="field"><label for="active">Active</label><input id="active" type="checkbox" name="active" checked></div>
+        <button class="button" id="submit-btn">Create</button>
+        <button class="button secondary hidden" id="cancel-edit" type="button">Cancel</button>
       </form>
+      <small class="muted">Tip: Use the Edit button in your listings to quickly load fields here.</small>
     </section>
 
     <section class="card">
@@ -130,7 +145,6 @@
     <a class="nav-item" href="../profile.html"><img class="nav-icon" src="../assets/profile.png" alt="" aria-hidden="true" /><span class="nav-label">Profile</span></a>
   </nav>
 
-  <!-- Load the app module directly. It will handle auth and redirect to ../signin.html if needed. -->
   <script type="module" src="../assets/js/merchant/listings.js"></script>
 </body>
 </html>
