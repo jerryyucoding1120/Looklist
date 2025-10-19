@@ -17,6 +17,22 @@ const emailErrorEl = document.getElementById('signin-email-error');
 const passwordErrorEl = document.getElementById('signin-password-error');
 let formBusy = false;
 
+// Parse and sanitize the next parameter for safe redirection
+const pageUrl = new URL(window.location.href);
+const nextRaw = pageUrl.searchParams.get('next');
+function getNextPath() {
+  if (!nextRaw) return 'index.html';
+  try {
+    const target = new URL(nextRaw, window.location.origin);
+    if (target.origin === window.location.origin) {
+      return target.pathname + target.search + target.hash;
+    }
+  } catch (e) {
+    // Invalid URL, fall back to default
+  }
+  return 'index.html';
+}
+
 function setStatus(type, message) {
   if (!statusEl) return;
   statusEl.textContent = message || '';
@@ -111,7 +127,7 @@ async function handleSubmit(event) {
     clearStoredAuthFlowType();
     setStatus('success', 'Signed in. Redirecting...');
     window.setTimeout(() => {
-      window.location.assign(resolveAppUrl('index.html'));
+      window.location.assign(resolveAppUrl(getNextPath()));
     }, 600);
   } catch (error) {
     console.error('[Signin] submit error', error);
@@ -152,7 +168,7 @@ async function init() {
     if (user) {
       setStatus('success', 'You are already signed in. Redirecting...');
       window.setTimeout(() => {
-        window.location.assign(resolveAppUrl('index.html'));
+        window.location.assign(resolveAppUrl(getNextPath()));
       }, 500);
       return;
     }
