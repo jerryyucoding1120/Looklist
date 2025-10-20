@@ -1,7 +1,7 @@
-import { sb } from './supabase-client.js';
+import { sb } from '../supabase-client.js';
 
 /** Wait for a session to settle (hash or code flow) up to timeoutMs. */
-async function waitForSession(timeoutMs = 3000) {
+async function waitForSession(timeoutMs = 5000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const { data: { session } } = await sb.auth.getSession();
@@ -12,7 +12,7 @@ async function waitForSession(timeoutMs = 3000) {
 }
 
 /** Redirect unauthenticated users to signin (../signin.html?next=...) */
-export async function requireUser({ waitMs = 3000 } = {}) {
+export async function requireUser({ waitMs = 5000 } = {}) {
   let { data: { session } } = await sb.auth.getSession();
   if (!session) session = await waitForSession(waitMs);
   if (session) {
