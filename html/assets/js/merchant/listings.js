@@ -11,6 +11,31 @@ const submitBtn = document.getElementById('submit-btn');
 
 let currentUser = null;
 
+/**
+ * Ensure a profile row exists for the user.
+ * Upserts into profiles table to prevent FK constraint violations.
+ */
+async function ensureProfileExists(sb, user) {
+  if (!user?.id) return;
+  
+  const { error } = await sb
+    .from('profiles')
+    .upsert(
+      { 
+        id: user.id,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || null,
+        avatar_url: user.user_metadata?.avatar_url || null
+      },
+      { onConflict: 'id' }
+    );
+  
+  if (error) {
+    console.warn('ensureProfileExists failed:', error.message);
+    // Don't throw - some environments may have RLS blocking this.
+    // The listings insert will fail with a clearer error if profile is truly missing.
+  }
+}
+
 main();
 
 async function main(){
@@ -41,13 +66,28 @@ async function main(){
       if (listingId) {
         // Update
         const { error } = await sb.from('listings').update(payload).eq('id', listingId);
-        if (error) { alert(error.message); return; }
+        if (error) {
+          alert(`Error updating listing: ${error.message}\n${error.details || ''}\n${error.hint || ''}`);
+          return;
+        }
         resetFormToCreate();
       } else {
-        // Create
+        // Create - ensure profile exists first
+        await ensureProfileExists(sb, currentUser);
+        
         payload.owner = currentUser.id;
         const { error } = await sb.from('listings').insert(payload);
-        if (error) { alert(error.message); return; }
+        if (error) {
+          // Provide detailed error message including hints for common issues
+          let errorMsg = `Error creating listing: ${error.message}`;
+          if (error.details) errorMsg += `\n\nDetails: ${error.details}`;
+          if (error.hint) errorMsg += `\n\nHint: ${error.hint}`;
+          if (error.code === '23503') {
+            errorMsg += '\n\nThis may be a foreign key constraint error. Please ensure your profile exists.';
+          }
+          alert(errorMsg);
+          return;
+        }
         form.reset();
       }
       await refreshMyListings(currentUser.id);
