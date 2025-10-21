@@ -101,7 +101,7 @@
 
   <nav class="mobile-bottom-nav" aria-label="Primary">
     <a class="nav-item" href="../index.html"><img class="nav-icon" src="../assets/home.png" alt="" aria-hidden="true" /><span class="nav-label">Home</span></a>
-    <a class="nav-item" href../services.html"><img class="nav-icon" src="../assets/service.png" alt="" aria-hidden="true" /><span class="nav-label">Services</span></a>
+    <a class="nav-item" href="../services.html"><img class="nav-icon" src="../assets/service.png" alt="" aria-hidden="true" /><span class="nav-label">Services</span></a>
     <a class="nav-item" href="../bookings.html"><img class="nav-icon" src="../assets/bookings.png" alt="" aria-hidden="true" /><span class="nav-label">Bookings</span></a>
     <a class="nav-item" href="../messages.html"><img class="nav-icon" src="../assets/messages.png" alt="" aria-hidden="true" /><span class="nav-label">Messages</span></a>
     <a class="nav-item" href="../profile.html"><img class="nav-icon" src="../assets/profile.png" alt="" aria-hidden="true" /><span class="nav-label">Profile</span></a>
@@ -111,22 +111,29 @@
   <script type="module">
     import { sb } from '/assets/js/supabase-client.js';
 
-    function cleanUrl() {
-      if (location.hash || location.search) {
-        history.replaceState(null, '', location.pathname);
+    function cleanUrlPreserveListing() {
+      // Preserve ?listing= parameter while removing everything else
+      const params = new URLSearchParams(location.search);
+      const listing = params.get('listing');
+      let newUrl = location.pathname;
+      if (listing) {
+        newUrl += '?listing=' + encodeURIComponent(listing);
+      }
+      if (location.search !== ('?listing=' + encodeURIComponent(listing || ''))) {
+        history.replaceState(null, '', newUrl);
       }
     }
 
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
-        cleanUrl();
+        cleanUrlPreserveListing();
         await import('/assets/js/merchant/availability.js');
         return;
       }
       sb.auth.onAuthStateChange((event, s) => {
         if (event === 'SIGNED_IN' && s) {
-          cleanUrl();
+          cleanUrlPreserveListing();
           import('/assets/js/merchant/availability.js');
         }
       });
