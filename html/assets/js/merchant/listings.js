@@ -12,11 +12,11 @@ const submitBtn = document.getElementById('submit-btn');
 let currentUser = null;
 
 // Log resolved configuration for debugging on initialization
-if (!window.__listingsConfigLogged) {
+if (!window.__looklist_listingsConfigLogged) {
   const projectRef = new URL(__SUPABASE_URL).hostname.split('.')[0];
   console.log(`[listings] Supabase project ref: ${projectRef}`);
   console.log(`[listings] Storage bucket: ${LISTING_IMAGES_BUCKET}`);
-  window.__listingsConfigLogged = true;
+  window.__looklist_listingsConfigLogged = true;
 }
 
 /**

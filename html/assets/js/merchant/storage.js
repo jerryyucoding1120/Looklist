@@ -18,14 +18,13 @@ export const LISTING_PHOTOS_BUCKET = LISTING_IMAGES_BUCKET;
 
 // Read signed URL mode from runtime overrides
 const USE_SIGNED_URLS =
-  (typeof window !== 'undefined' && window.ENV?.USE_SIGNED_URLS) ||
-  getMeta('use-signed-urls') === 'true' ||
-  false;
+  !!(typeof window !== 'undefined' && window.ENV?.USE_SIGNED_URLS) ||
+  getMeta('use-signed-urls') === 'true';
 
 // Log resolved bucket configuration once for debugging
-if (!window.__storageConfigLogged) {
+if (!window.__looklist_storageConfigLogged) {
   console.debug(`[storage] Resolved bucket: ${LISTING_IMAGES_BUCKET}, USE_SIGNED_URLS: ${USE_SIGNED_URLS}`);
-  window.__storageConfigLogged = true;
+  window.__looklist_storageConfigLogged = true;
 }
 
 export function getPublicUrl(path) {
