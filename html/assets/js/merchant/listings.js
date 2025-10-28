@@ -1,6 +1,6 @@
-import { sb } from '../supabase-client.js';
+import { sb, __SUPABASE_URL } from '../supabase-client.js';
 import { requireUser, signOut } from './auth.js';
-import { listListingImages, uploadListingImages, deleteListingImage } from './storage.js';
+import { LISTING_IMAGES_BUCKET, listListingImages, uploadListingImages, deleteListingImage } from './storage.js';
 
 const form = document.getElementById('listing-form');
 const list = document.getElementById('my-listings');
@@ -10,6 +10,14 @@ const formTitle = document.getElementById('form-title');
 const submitBtn = document.getElementById('submit-btn');
 
 let currentUser = null;
+
+// Log resolved configuration for debugging on initialization
+if (!window.__listingsConfigLogged) {
+  const projectRef = new URL(__SUPABASE_URL).hostname.split('.')[0];
+  console.log(`[listings] Supabase project ref: ${projectRef}`);
+  console.log(`[listings] Storage bucket: ${LISTING_IMAGES_BUCKET}`);
+  window.__listingsConfigLogged = true;
+}
 
 /**
  * Ensure a profile row exists for the user.
@@ -248,6 +256,7 @@ async function renderListingImages(listingId){
       `).join('');
     }
   } catch (err) {
+    console.error('[listings] Error rendering listing images:', err);
     container.innerHTML = `<div class="muted">Error: ${escapeHtml(err.message || String(err))}</div>`;
   } finally {
     if (status) status.textContent = '';
