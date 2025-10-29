@@ -11,12 +11,12 @@ function getMeta(name) {
 const SUPABASE_URL =
   (typeof window !== 'undefined' && window.ENV?.SUPABASE_URL) ||
   getMeta('supabase-url') ||
-  'https://enkibawrpiqfnzhtifsf.supabase.co';
+  'https://rgzdgeczrncuxufkyuxf.supabase.co';
 
 const SUPABASE_ANON_KEY =
   (typeof window !== 'undefined' && window.ENV?.SUPABASE_ANON_KEY) ||
   getMeta('supabase-anon-key') ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVua2liYXdycGlxZm56aHRpZnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NzQ5MTMsImV4cCI6MjA3NDA1MDkxM30.m3Bu116Bau6iCJ-BqJZX9fYuKSRX_8-WgblsDwutkfI';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
 
 // Export for debugging - consumers can check which project is in use
 export const __SUPABASE_URL = SUPABASE_URL;
