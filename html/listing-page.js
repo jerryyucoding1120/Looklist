@@ -107,7 +107,7 @@ async function handleBooking(listing) {
   const maxRedeemable = Math.min(lldSelected, Math.floor(slotPrice * 100));
 
   try {
-    const response = await fetch('https://enkibawrpiqfnzhtifsf.supabase.co/functions/v1/create-checkout-session', {
+    const response = await fetch('https://rgzdgeczrncuxufkyuxf.supabase.co/functions/v1/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
