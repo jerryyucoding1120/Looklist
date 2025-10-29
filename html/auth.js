@@ -6,7 +6,7 @@
 
 const SUPABASE_JS_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVua2liYXdycGlxZm56aHRpZnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NzQ5MTMsImV4cCI6MjA3NDA1MDkxM30.m3Bu116Bau6iCJ-BqJZX9fYuKSRX_8-WgblsDwutkfI';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
 
 let spLocal;
 let spSession;
