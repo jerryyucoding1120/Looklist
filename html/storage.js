@@ -6,6 +6,9 @@ export const LISTING_IMAGES_BUCKET =
   (typeof window !== 'undefined' && window.ENV?.LISTING_IMAGES_BUCKET) ||
   'listing-photos';
 
+// Signed URL expiration time in seconds (1 hour)
+const SIGNED_URL_EXPIRY_SECONDS = 3600;
+
 // Read signed URL mode from runtime overrides
 const USE_SIGNED_URLS =
   !!(typeof window !== 'undefined' && window.ENV?.USE_SIGNED_URLS) ||
@@ -28,10 +31,10 @@ export function getPublicUrl(path) {
  */
 export async function getImageUrl(path) {
   if (USE_SIGNED_URLS) {
-    // Return signed URL with 1 hour expiration for private buckets
+    // Return signed URL with expiration for private buckets
     const { data, error } = await spLocal.storage
       .from(LISTING_IMAGES_BUCKET)
-      .createSignedUrl(path, 3600); // 1 hour = 3600 seconds
+      .createSignedUrl(path, SIGNED_URL_EXPIRY_SECONDS);
     
     if (error) {
       console.error(`[storage] Error creating signed URL for ${path}:`, error);

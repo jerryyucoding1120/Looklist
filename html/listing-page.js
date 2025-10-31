@@ -55,7 +55,11 @@ function renderListing(listing) {
 }
 
 async function renderPhotoGallery(listingId) {
-  if (!photoGalleryEl) return;
+  if (!photoGalleryEl) {
+    // Reset global state if element doesn't exist
+    galleryPhotos = [];
+    return;
+  }
   
   photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
   
@@ -91,6 +95,7 @@ async function renderPhotoGallery(listingId) {
   } catch (error) {
     console.error('[Listing] Error loading photos:', error);
     photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">Unable to load photos.</div>';
+    galleryPhotos = []; // Reset on error
   }
 }
 
