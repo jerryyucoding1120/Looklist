@@ -37,7 +37,7 @@ export async function getImageUrl(path) {
       .createSignedUrl(path, SIGNED_URL_EXPIRY_SECONDS);
     
     if (error) {
-      console.error(`[storage] Error creating signed URL for ${path}:`, error);
+      console.error('[storage] Error creating signed URL for path:', path, 'Error:', error);
       // Fallback to public URL on error
       return getPublicUrl(path);
     }
@@ -66,7 +66,7 @@ export async function listListingPhotos(listingId) {
       });
     
     if (error) {
-      console.error(`[storage] Error listing photos for listing ${listingId}:`, error);
+      console.error('[storage] Error listing photos for listing:', listingId, 'Error:', error);
       return [];
     }
     
@@ -88,7 +88,7 @@ export async function listListingPhotos(listingId) {
     
     return files;
   } catch (err) {
-    console.error(`[storage] Exception listing photos for listing ${listingId}:`, err);
+    console.error('[storage] Exception listing photos for listing:', listingId, 'Error:', err);
     return [];
   }
 }
