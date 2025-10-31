@@ -1,6 +1,7 @@
 import { sb, __SUPABASE_URL } from '../supabase-client.js';
 import { requireUser, signOut } from './auth.js';
 import { LISTING_IMAGES_BUCKET, listListingImages, uploadListingImages, deleteListingImage } from './storage.js';
+import { initializeSlotEditor } from '../slot-editor.js';
 
 const form = document.getElementById('listing-form');
 const list = document.getElementById('my-listings');
@@ -51,6 +52,12 @@ async function main(){
   if (signoutBtn) signoutBtn.onclick = signOut;
 
   await refreshMyListings(currentUser.id);
+
+  // Initialize slot editor
+  const slotEditorContainer = document.getElementById('slot-editor-container');
+  if (slotEditorContainer) {
+    await initializeSlotEditor(currentUser, slotEditorContainer);
+  }
 
   // Create/Edit form submit
   if (form) {
