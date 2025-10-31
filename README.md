@@ -230,3 +230,83 @@ The system will:
 - RLS policies ensure merchants can only manage slots for their own listings
 - Public users can only view slots with `status = 'open'`
 - No sensitive credentials or service role keys are exposed to the frontend
+
+## Listing Photos
+
+The application supports photo uploads for merchant listings and displays them to customers on the listing detail and search pages.
+
+### Storage Bucket Setup
+
+Photos are stored in a Supabase Storage bucket named `listing-photos` (configurable via environment variables). Each listing's photos are organized in a folder structure: `{listing_id}/{photo_filename}`.
+
+### Storage Bucket RLS Policies
+
+For security, ensure the following policies are configured on the `listing-photos` bucket:
+
+```sql
+-- Allow authenticated merchants to upload photos to their own listing folders
+-- This requires checking that the listing belongs to the authenticated user
+CREATE POLICY "Merchants can upload photos to their listings"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'listing-photos' AND
+    (storage.foldername(name))[1] IN (
+      SELECT id::text FROM public.listings WHERE owner = auth.uid()
+    )
+  );
+
+-- Allow authenticated merchants to delete photos from their own listing folders
+CREATE POLICY "Merchants can delete photos from their listings"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'listing-photos' AND
+    (storage.foldername(name))[1] IN (
+      SELECT id::text FROM public.listings WHERE owner = auth.uid()
+    )
+  );
+
+-- Allow public read access to all listing photos
+-- This enables customers to view photos without authentication
+CREATE POLICY "Public users can view listing photos"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'listing-photos');
+```
+
+**Note:** The public SELECT policy allows viewing all photos in the bucket. Since listings are filtered by `active=true` in the application, inactive listing photos won't be easily discovered, but they remain technically accessible if the URL is known. For stricter security:
+
+1. Use a private bucket with signed URLs (set `USE_SIGNED_URLS=true` environment variable)
+2. Implement an edge function to validate listing access before generating signed URLs
+3. Regularly clean up photos for deleted listings
+
+### Customer-Facing Photo Display
+
+**Listing Detail Page (`listing.html`):**
+- Displays a photo gallery in a responsive grid layout
+- Clicking on a photo opens a lightbox modal with full-size image
+- Lightbox supports keyboard navigation (arrow keys, escape to close)
+- Shows "No photos available" message if listing has no photos
+
+**Search Results Page (`search.html`):**
+- Displays the first photo of each listing as a thumbnail
+- Thumbnails are loaded asynchronously for better performance
+- Shows a placeholder background while photos load
+- Gracefully handles listings without photos
+
+### Implementation Files
+
+- `html/storage.js` - Customer-facing storage utility for fetching listing photos
+- `html/assets/js/merchant/storage.js` - Merchant utility for uploading/managing photos
+- `html/listing-page.js` - Listing detail page with photo gallery
+- `html/search-page.js` - Search results with thumbnails
+- `html/patch-additions.css` - Shared CSS for cards and thumbnails
+
+### Security Considerations
+
+1. **RLS on Listings Table:** The application already filters listings by `active=true`, ensuring only active listings are shown to customers
+2. **Storage Bucket Access:** Photos are publicly readable but only merchants can upload/delete photos for their own listings
+3. **URL Validation:** Photo URLs are generated from storage paths and don't expose sensitive data
+4. **Error Handling:** Failed photo loads are handled gracefully without breaking the page
+5. **CORS:** Ensure Supabase storage bucket has appropriate CORS settings if photos are served from a different domain

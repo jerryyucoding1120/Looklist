@@ -1,4 +1,5 @@
 import { getAuthClients } from './auth.js';
+import { listListingPhotos } from './storage.js';
 
 const params = new URLSearchParams(window.location.search);
 const state = {
@@ -53,8 +54,29 @@ async function fetchRows() {
     resultsEl.textContent = 'No matches yet.';
     return;
   }
+  
+  // Render cards first
   resultsEl.innerHTML = data.map(rowToCard).join('');
   renderPills();
+  
+  // Load thumbnails for each listing in parallel with controlled concurrency
+  const thumbnailPromises = data.map(row => loadListingThumbnail(row.id));
+  await Promise.allSettled(thumbnailPromises);
+}
+
+async function loadListingThumbnail(listingId) {
+  try {
+    const photos = await listListingPhotos(listingId);
+    const thumbnailContainer = document.querySelector(`[data-listing-id="${listingId}"] .card-thumbnail`);
+    
+    if (thumbnailContainer && photos && photos.length > 0) {
+      const firstPhoto = photos[0];
+      thumbnailContainer.innerHTML = `<img src="${escapeHTML(firstPhoto.url)}" alt="Listing thumbnail" loading="lazy">`;
+    }
+  } catch (error) {
+    console.error(`[Search] Error loading thumbnail for listing ${listingId}:`, error);
+    // Silently fail - card will just not have a photo
+  }
 }
 
 function rowToCard(row) {
@@ -62,7 +84,8 @@ function rowToCard(row) {
   const rating = row.rating ?? 'N/A';
   const city = row.city || '';
   const price = row.price_from ?? 'N/A';
-  return `<article class="card">
+  return `<article class="card" data-listing-id="${escapeHTML(row.id)}">
+    <div class="card-thumbnail card-thumbnail-placeholder"></div>
     <div class="card__top"><h3>${escapeHTML(row.name)}</h3><div>Rating ${rating}</div></div>
     <div class="card__meta">${cap(row.category)} - ${escapeHTML(city)} - from GBP ${price}</div>
     <button class="btn" data-href="${url}">Book</button>

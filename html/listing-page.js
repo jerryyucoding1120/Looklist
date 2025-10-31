@@ -1,9 +1,11 @@
 import { getAuthClients } from './auth.js';
+import { listListingPhotos } from './storage.js';
 
 const searchParams = new URLSearchParams(window.location.search);
 const listingId = searchParams.get('id');
 
 const infoEl = document.getElementById('listingInfo');
+const photoGalleryEl = document.getElementById('photoGallery');
 const slotsEl = document.getElementById('slots');
 const bookButton = document.getElementById('bookBtn');
 const lldInput = document.getElementById('lld');
@@ -11,6 +13,8 @@ const lldValue = document.getElementById('lldValue');
 
 const clientsPromise = getAuthClients();
 let selectedSlotId = null;
+let galleryPhotos = [];
+let currentPhotoIndex = 0;
 
 function formatMoney(value) {
   const amount = Number(value);
@@ -48,6 +52,139 @@ function renderListing(listing) {
     </div>
     <div class="card__meta">${capitalise(listing.category)} - ${escapeHTML(city)} - from ${formatMoney(priceFrom)}</div>
   </article>`;
+}
+
+async function renderPhotoGallery(listingId) {
+  // Always initialize/reset gallery state at the start
+  galleryPhotos = [];
+  
+  if (!photoGalleryEl) {
+    return;
+  }
+  
+  photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
+  
+  try {
+    const photos = await listListingPhotos(listingId);
+    galleryPhotos = photos;
+    
+    if (!photos || photos.length === 0) {
+      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">No photos available for this listing.</div>';
+      return;
+    }
+    
+    const galleryHTML = `
+      <h2 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Photos</h2>
+      <div class="photo-gallery-grid">
+        ${photos.map((photo, index) => `
+          <div class="photo-gallery-item" data-photo-index="${index}">
+            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1}" loading="lazy">
+          </div>
+        `).join('')}
+      </div>
+    `;
+    
+    photoGalleryEl.innerHTML = galleryHTML;
+    
+    // Add click handlers for lightbox
+    photoGalleryEl.querySelectorAll('.photo-gallery-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const index = parseInt(item.getAttribute('data-photo-index'), 10);
+        openLightbox(index);
+      });
+    });
+  } catch (error) {
+    console.error('[Listing] Error loading photos:', error);
+    photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">Unable to load photos.</div>';
+    galleryPhotos = []; // Reset on error
+  }
+}
+
+function openLightbox(index) {
+  if (!galleryPhotos || galleryPhotos.length === 0) return;
+  
+  currentPhotoIndex = index;
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  
+  if (lightbox && lightboxImg) {
+    lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  if (lightbox) {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+function navigateLightbox(direction) {
+  if (!galleryPhotos || galleryPhotos.length === 0) return;
+  
+  currentPhotoIndex += direction;
+  
+  if (currentPhotoIndex < 0) {
+    currentPhotoIndex = galleryPhotos.length - 1;
+  } else if (currentPhotoIndex >= galleryPhotos.length) {
+    currentPhotoIndex = 0;
+  }
+  
+  const lightboxImg = document.getElementById('lightbox-img');
+  if (lightboxImg) {
+    lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
+  }
+}
+
+function setupLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  const closeBtn = lightbox?.querySelector('.lightbox-close');
+  const prevBtn = lightbox?.querySelector('.lightbox-prev');
+  const nextBtn = lightbox?.querySelector('.lightbox-next');
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeLightbox);
+  }
+  
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => navigateLightbox(-1));
+  }
+  
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => navigateLightbox(1));
+  }
+  
+  // Close on background click
+  if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+  }
+  
+  // Keyboard navigation handler
+  const handleKeydown = (e) => {
+    const lightboxActive = lightbox?.classList.contains('active');
+    if (!lightboxActive) return;
+    
+    if (e.key === 'Escape') {
+      closeLightbox();
+    } else if (e.key === 'ArrowLeft') {
+      navigateLightbox(-1);
+    } else if (e.key === 'ArrowRight') {
+      navigateLightbox(1);
+    }
+  };
+  
+  // Add keyboard listener only once by checking for existing marker
+  if (!document.body.hasAttribute('data-lightbox-keyboard-listener')) {
+    document.addEventListener('keydown', handleKeydown);
+    document.body.setAttribute('data-lightbox-keyboard-listener', 'true');
+  }
 }
 
 function renderSlots(slots) {
@@ -156,6 +293,9 @@ async function loadData() {
   }
   const listing = listingResult.data;
   renderListing(listing);
+  
+  // Load photos for the listing
+  await renderPhotoGallery(listingId);
 
   if (availabilityResult.error) {
     if (slotsEl) slotsEl.textContent = availabilityResult.error.message;
@@ -171,6 +311,7 @@ async function loadData() {
 
 async function init() {
   setupLldField();
+  setupLightbox();
   await loadData();
 }
 
