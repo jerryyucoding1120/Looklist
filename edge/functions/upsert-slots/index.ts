@@ -152,8 +152,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in upsert-slots:', error);
     return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
+      error: 'Internal server error'
     }), {
       status: 500,
       headers: { 'content-type': 'application/json' }
