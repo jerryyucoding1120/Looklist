@@ -51,7 +51,9 @@ export async function getImageUrl(path) {
 
 /**
  * List photos for a specific listing (customer-facing)
- * Only fetches photos for active/public listings
+ * Note: This function lists files from the storage bucket for the given listing ID.
+ * It does not validate if the listing is active. The listing should be validated
+ * by the calling code before fetching photos (e.g., check listings table with active=true).
  * @param {string} listingId - The listing UUID
  * @returns {Promise<Array>} - Array of photo objects with url, name, path
  */

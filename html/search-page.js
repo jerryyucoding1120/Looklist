@@ -59,10 +59,9 @@ async function fetchRows() {
   resultsEl.innerHTML = data.map(rowToCard).join('');
   renderPills();
   
-  // Load thumbnails for each listing asynchronously
-  data.forEach(async (row) => {
-    await loadListingThumbnail(row.id);
-  });
+  // Load thumbnails for each listing in parallel with controlled concurrency
+  const thumbnailPromises = data.map(row => loadListingThumbnail(row.id));
+  await Promise.allSettled(thumbnailPromises);
 }
 
 async function loadListingThumbnail(listingId) {

@@ -55,9 +55,10 @@ function renderListing(listing) {
 }
 
 async function renderPhotoGallery(listingId) {
+  // Always initialize/reset gallery state at the start
+  galleryPhotos = [];
+  
   if (!photoGalleryEl) {
-    // Reset global state if element doesn't exist
-    galleryPhotos = [];
     return;
   }
   
@@ -165,8 +166,8 @@ function setupLightbox() {
     });
   }
   
-  // Keyboard navigation
-  document.addEventListener('keydown', (e) => {
+  // Keyboard navigation handler
+  const handleKeydown = (e) => {
     const lightboxActive = lightbox?.classList.contains('active');
     if (!lightboxActive) return;
     
@@ -177,7 +178,13 @@ function setupLightbox() {
     } else if (e.key === 'ArrowRight') {
       navigateLightbox(1);
     }
-  });
+  };
+  
+  // Add keyboard listener only once by checking for existing marker
+  if (!document.body.hasAttribute('data-lightbox-keyboard-listener')) {
+    document.addEventListener('keydown', handleKeydown);
+    document.body.setAttribute('data-lightbox-keyboard-listener', 'true');
+  }
 }
 
 function renderSlots(slots) {
