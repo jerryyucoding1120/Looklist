@@ -123,8 +123,6 @@ export async function upsertSlots(listingId, slots) {
     throw new Error('Not authenticated');
   }
 
-  // Get the project reference from the URL
-  const projectRef = new URL(__SUPABASE_URL).hostname.split('.')[0];
   const edgeFunctionUrl = `${__SUPABASE_URL}/functions/v1/upsert-slots`;
 
   const response = await fetch(edgeFunctionUrl, {
@@ -140,8 +138,8 @@ export async function upsertSlots(listingId, slots) {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+    throw new Error(errorData.error || errorData.details || `HTTP ${response.status}: ${response.statusText}`);
   }
 
   return await response.json();
@@ -196,9 +194,11 @@ async function handleGenerateSlots(form, container) {
   const endDate = formData.get('end_date');
   const startTime = formData.get('start_time');
   const endTime = formData.get('end_time');
-  const duration = parseInt(formData.get('duration'));
-  const price = parseFloat(formData.get('price')) || null;
-  const capacity = parseInt(formData.get('capacity')) || 1;
+  const duration = Number(formData.get('duration'));
+  const priceValue = formData.get('price');
+  const price = priceValue && priceValue !== '' ? parseFloat(priceValue) : null;
+  const capacityValue = formData.get('capacity');
+  const capacity = capacityValue && capacityValue !== '' ? Number(capacityValue) : 1;
 
   // Get selected days of week
   const daysOfWeek = [];
@@ -214,8 +214,23 @@ async function handleGenerateSlots(form, container) {
     return;
   }
 
-  if (!startDate || !endDate || !startTime || !endTime || !duration) {
+  if (!startDate || !endDate || !startTime || !endTime) {
     alert('Please fill in all required fields');
+    return;
+  }
+
+  if (isNaN(duration) || duration <= 0) {
+    alert('Duration must be a positive number');
+    return;
+  }
+
+  if (price !== null && (isNaN(price) || price < 0)) {
+    alert('Price must be a non-negative number');
+    return;
+  }
+
+  if (isNaN(capacity) || capacity < 1) {
+    alert('Capacity must be at least 1');
     return;
   }
 
