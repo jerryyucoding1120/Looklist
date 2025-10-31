@@ -126,6 +126,86 @@
       <ul id="my-listings" class="list">Loading…</ul>
       <div class="row"><a href="#" id="signout" class="secondary">Sign out</a></div>
     </section>
+
+    <section class="card">
+      <h3>Generate Time Slots</h3>
+      <p class="muted">Create multiple time slots across a date range with custom working hours and day-of-week filters.</p>
+      <div id="slot-editor-container">
+        <form id="generate-slots-form" class="row">
+          <div class="field" style="flex: 1 1 100%;">
+            <label for="slot-listing-select">Select Listing</label>
+            <select id="slot-listing-select" name="listing_id" required>
+              <option value="">Loading listings...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="slot-start-date">Start Date</label>
+            <input type="date" id="slot-start-date" name="start_date" required>
+          </div>
+
+          <div class="field">
+            <label for="slot-end-date">End Date</label>
+            <input type="date" id="slot-end-date" name="end_date" required>
+          </div>
+
+          <div class="field">
+            <label for="slot-start-time">Start Time</label>
+            <input type="time" id="slot-start-time" name="start_time" value="09:00" required>
+          </div>
+
+          <div class="field">
+            <label for="slot-end-time">End Time</label>
+            <input type="time" id="slot-end-time" name="end_time" value="17:00" required>
+          </div>
+
+          <div class="field">
+            <label for="slot-duration">Duration (minutes)</label>
+            <input type="number" id="slot-duration" name="duration" min="5" step="5" value="30" required>
+          </div>
+
+          <div class="field">
+            <label for="slot-price">Price (£) - Optional</label>
+            <input type="number" id="slot-price" name="price" step="0.01" min="0" placeholder="50.00">
+          </div>
+
+          <div class="field">
+            <label for="slot-capacity">Capacity</label>
+            <input type="number" id="slot-capacity" name="capacity" min="1" step="1" value="1" required>
+          </div>
+
+          <div class="field" style="flex: 1 1 100%;">
+            <label>Days of Week</label>
+            <div class="row" style="gap: .5rem;">
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="monday" checked> Monday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="tuesday" checked> Tuesday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="wednesday" checked> Wednesday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="thursday" checked> Thursday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="friday" checked> Friday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="saturday"> Saturday
+              </label>
+              <label style="display: flex; align-items: center; gap: .3rem; font-weight: normal;">
+                <input type="checkbox" name="sunday"> Sunday
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="button">Generate Slots</button>
+        </form>
+        <div id="slot-generation-status" class="muted" style="margin-top: .8rem; min-height: 1.5rem;"></div>
+      </div>
+    </section>
   </main>
 
   <footer>
