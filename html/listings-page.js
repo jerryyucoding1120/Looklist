@@ -91,9 +91,9 @@ function renderPhotoCarousel(listingId, photos) {
             ${isFirst ? `src="${escapeHTML(photo.url)}"` : `data-src="${escapeHTML(photo.url)}"`}
             alt="Listing photo ${index + 1} of ${photos.length}"
             ${!isFirst ? 'loading="lazy"' : ''}
-            onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('sr-only');"
+            data-photo-index="${index}"
           >
-          <div class="listing-photo-placeholder sr-only">
+          <div class="listing-photo-placeholder sr-only" role="alert" aria-live="polite">
             <span>Photo failed to load</span>
           </div>
         `;
@@ -282,6 +282,17 @@ function setupPhotoNavigation() {
 
     updateCarousel(listingId, state);
   });
+  
+  // Centralized image error handling
+  document.addEventListener('error', (e) => {
+    if (e.target.tagName === 'IMG' && e.target.classList.contains('listing-photo')) {
+      e.target.style.display = 'none';
+      const placeholder = e.target.nextElementSibling;
+      if (placeholder && placeholder.classList.contains('listing-photo-placeholder')) {
+        placeholder.classList.remove('sr-only');
+      }
+    }
+  }, true);
 }
 
 /**
@@ -297,13 +308,19 @@ function updateCarousel(listingId, state) {
   if (container) {
     container.style.transform = `translateX(-${state.currentIndex * 100}%)`;
     
-    // Load next image if it has data-src
+    // Load next image if it has data-src and intersection observer is available
     const images = container.querySelectorAll('.listing-photo');
     const currentImg = images[state.currentIndex];
-    if (currentImg && currentImg.dataset.src && intersectionObserver) {
-      currentImg.src = currentImg.dataset.src;
-      currentImg.removeAttribute('data-src');
-      intersectionObserver.unobserve(currentImg);
+    if (currentImg && currentImg.dataset.src) {
+      if (intersectionObserver) {
+        currentImg.src = currentImg.dataset.src;
+        currentImg.removeAttribute('data-src');
+        intersectionObserver.unobserve(currentImg);
+      } else {
+        // Fallback if no intersection observer
+        currentImg.src = currentImg.dataset.src;
+        currentImg.removeAttribute('data-src');
+      }
     }
   }
 
