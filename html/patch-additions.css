@@ -5,10 +5,12 @@
 .card__meta{ opacity:.8; margin-top:.25rem; }
 
 /* Card thumbnail styles */
-.card-thumbnail{ width:100%; height:180px; border-radius:.6rem; overflow:hidden; margin-bottom:.8rem; background:#0a0a0a; display:flex; align-items:center; justify-content:center; position:relative; }
-.card-thumbnail img{ width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease; }
+.card-thumbnail{ width:100%; height:180px; border-radius:.6rem; overflow:hidden; margin-bottom:.8rem; background:#0a0a0a; display:flex; align-items:center; justify-content:center; position:relative; transition: opacity 0.3s ease; }
+.card-thumbnail img{ width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease, opacity 0.3s ease; opacity:0; animation: fadeIn 0.4s ease forwards; }
+@keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
 .card:hover .card-thumbnail img{ transform: scale(1.05); }
-.card-thumbnail-placeholder{ background:linear-gradient(135deg, #0c0d0e 0%, #191a1b 100%); }
+.card-thumbnail-placeholder{ background:linear-gradient(135deg, #0c0d0e 0%, #191a1b 100%); position:relative; }
+.card-thumbnail-placeholder::before{ content:''; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:48px; height:48px; opacity:0.2; background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>') center/contain no-repeat; }
 
 /* Save to list button */
 .card-save-btn{ 
