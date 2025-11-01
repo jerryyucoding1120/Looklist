@@ -27,6 +27,38 @@ function toggleHeaderLinks(user) {
 }
 
 /**
+ * Show a toast notification to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification (success, error, info)
+ * @param {number} duration - Duration in milliseconds (default 3000)
+ */
+function showToast(message, type = 'info', duration = 3000) {
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  
+  // Add icon based on type
+  let icon = '💡';
+  if (type === 'success') icon = '✓';
+  else if (type === 'error') icon = '✗';
+  
+  toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span>${escapeHTML(message)}</span>`;
+  
+  // Add to body
+  document.body.appendChild(toast);
+  
+  // Auto remove after duration
+  setTimeout(() => {
+    toast.style.animation = 'slideInUp 0.3s ease reverse';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, duration);
+}
+
+/**
  * Fetch customer lists with their saved listings
  * For this MVP, we'll create a "Favorites" list automatically if it doesn't exist
  */
@@ -193,7 +225,7 @@ function createListCard(list, listings) {
   card.addEventListener('click', () => {
     // For now, show message that detail view is coming soon
     // TODO: Implement list-detail.html page
-    alert('List details view coming soon! This will show all saved listings in this list.');
+    showToast('List details view coming soon! This will show all saved listings in this list.', 'info', 4000);
   });
   
   // Add keyboard support
