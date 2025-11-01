@@ -66,17 +66,31 @@ async function fetchRows() {
 }
 
 async function loadListingThumbnail(listingId) {
+  // Query DOM once outside try block to avoid redundant queries
+  const thumbnailContainer = document.querySelector(`[data-listing-id="${listingId}"] .card-thumbnail`);
+  
+  if (!thumbnailContainer) {
+    console.warn(`[Search] Thumbnail container not found for listing ${listingId}`);
+    return;
+  }
+  
   try {
     const photos = await listListingPhotos(listingId);
-    const thumbnailContainer = document.querySelector(`[data-listing-id="${listingId}"] .card-thumbnail`);
     
-    if (thumbnailContainer && photos && photos.length > 0) {
+    if (photos && photos.length > 0) {
       const firstPhoto = photos[0];
+      // Remove placeholder class when image is loaded
+      thumbnailContainer.classList.remove('card-thumbnail-placeholder');
       thumbnailContainer.innerHTML = `<img src="${escapeHTML(firstPhoto.url)}" alt="Listing thumbnail" loading="lazy">`;
+    } else {
+      // Keep placeholder but ensure it's properly styled for empty state
+      thumbnailContainer.classList.add('card-thumbnail-placeholder');
+      console.debug(`[Search] No photos available for listing ${listingId}`);
     }
   } catch (error) {
     console.error(`[Search] Error loading thumbnail for listing ${listingId}:`, error);
-    // Silently fail - card will just not have a photo
+    // Keep placeholder class on error - card will display empty state
+    thumbnailContainer.classList.add('card-thumbnail-placeholder');
   }
 }
 
