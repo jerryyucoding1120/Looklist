@@ -1,5 +1,6 @@
 import { getAuthClients } from './auth.js';
 import { listListingPhotos } from './storage.js';
+import { getCurrentUser, sp } from './api.js';
 
 const params = new URLSearchParams(window.location.search);
 const state = {
@@ -80,15 +81,19 @@ async function loadListingThumbnail(listingId) {
 }
 
 function rowToCard(row) {
-  const url = `listing.html?id=${row.id}&category=${encodeURIComponent(state.category)}`;
   const rating = row.rating ?? 'N/A';
   const city = row.city || '';
   const price = row.price_from ?? 'N/A';
-  return `<article class="card" data-listing-id="${escapeHTML(row.id)}">
+  return `<article class="card" data-listing-id="${escapeHTML(row.id)}" data-category="${escapeHTML(state.category)}">
     <div class="card-thumbnail card-thumbnail-placeholder"></div>
+    <button class="card-save-btn" data-listing-id="${escapeHTML(row.id)}" aria-label="Save to list" title="Save to list">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+    </button>
     <div class="card__top"><h3>${escapeHTML(row.name)}</h3><div>Rating ${rating}</div></div>
     <div class="card__meta">${cap(row.category)} - ${escapeHTML(city)} - from GBP ${price}</div>
-    <button class="btn" data-href="${url}">Book</button>
+    <button class="btn btn-view-listing">Book</button>
   </article>`;
 }
 
@@ -114,9 +119,28 @@ function attachHandlers() {
   if (resultsEl) {
     resultsEl.addEventListener('click', (event) => {
       const target = event.target;
-      if (target instanceof HTMLElement && target.matches('button[data-href]')) {
-        const href = target.getAttribute('data-href');
-        if (href) window.location.href = href;
+      if (target instanceof HTMLElement) {
+        // Handle "Book" button click
+        if (target.matches('.btn-view-listing')) {
+          const card = target.closest('.card');
+          if (card) {
+            const listingId = card.getAttribute('data-listing-id');
+            const category = card.getAttribute('data-category');
+            if (listingId) {
+              // Construct URL from validated data attributes instead of reading href
+              const url = `listing.html?id=${encodeURIComponent(listingId)}&category=${encodeURIComponent(category || '')}`;
+              window.location.assign(url);
+            }
+          }
+        } 
+        // Handle save button click
+        else if (target.matches('.card-save-btn') || target.closest('.card-save-btn')) {
+          const btn = target.matches('.card-save-btn') ? target : target.closest('.card-save-btn');
+          const listingId = btn.getAttribute('data-listing-id');
+          if (listingId) {
+            handleSaveToList(listingId, btn);
+          }
+        }
       }
     });
   }
@@ -141,6 +165,108 @@ function escapeHTML(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/**
+ * Show a toast notification to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification (success, error, info)
+ * @param {number} duration - Duration in milliseconds (default 3000)
+ */
+function showToast(message, type = 'info', duration = 3000) {
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  
+  // Add icon based on type
+  let icon = '💡';
+  if (type === 'success') icon = '✓';
+  else if (type === 'error') icon = '✗';
+  
+  toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span>${escapeHTML(message)}</span>`;
+  
+  // Add to body
+  document.body.appendChild(toast);
+  
+  // Auto remove after duration
+  setTimeout(() => {
+    toast.style.animation = 'slideInUp 0.3s ease reverse';
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, duration);
+}
+
+async function handleSaveToList(listingId, buttonElement) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      showToast('Please sign in to save listings to your list.', 'info');
+      setTimeout(() => {
+        window.location.href = 'signin.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+      }, 1000);
+      return;
+    }
+
+    // Get or create default favorites list
+    const client = await sp();
+    let listId = 'default-favorites';
+    
+    try {
+      // Try to get the user's favorites list
+      const { data: lists, error: listError } = await client
+        .from('customer_lists')
+        .select('*')
+        .eq('customer_id', user.id)
+        .eq('name', 'Favorites')
+        .limit(1);
+      
+      if (listError) {
+        console.warn('[Search] customer_lists table may not exist, using fallback');
+      } else if (lists && lists.length > 0) {
+        listId = lists[0].id;
+      } else {
+        // Create a new favorites list
+        const { data: newList, error: createError } = await client
+          .from('customer_lists')
+          .insert({ customer_id: user.id, name: 'Favorites' })
+          .select()
+          .single();
+        
+        if (!createError && newList) {
+          listId = newList.id;
+        }
+      }
+      
+      // Add the listing to the list
+      const { error: addError } = await client
+        .from('list_items')
+        .insert({
+          list_id: listId,
+          listing_id: listingId
+        });
+      
+      if (addError) {
+        if (addError.code === '23505') {
+          showToast('This listing is already in your favorites!', 'info');
+        } else {
+          console.error('[Search] Error adding to list:', addError);
+          showToast('Unable to save to list. Please ensure database tables are set up correctly.', 'error');
+        }
+      } else {
+        // Visual feedback
+        buttonElement.classList.add('saved');
+        buttonElement.style.color = '#ff6b9d';
+        showToast('Saved to your favorites!', 'success');
+      }
+    } catch (err) {
+      console.warn('[Search] Save to list feature not fully implemented:', err);
+      showToast('Save to list feature coming soon! Database tables may need to be created.', 'info', 4000);
+    }
+  } catch (error) {
+    console.error('[Search] Error in handleSaveToList:', error);
+    showToast('Unable to save listing. Please try again later.', 'error');
+  }
 }
 
 async function init() {
