@@ -1,5 +1,6 @@
 import { getAuthClients } from './auth.js';
 import { listListingPhotos } from './storage.js';
+import { getCurrentUser, sp } from './api.js';
 
 const params = new URLSearchParams(window.location.search);
 const state = {
@@ -86,6 +87,11 @@ function rowToCard(row) {
   const price = row.price_from ?? 'N/A';
   return `<article class="card" data-listing-id="${escapeHTML(row.id)}">
     <div class="card-thumbnail card-thumbnail-placeholder"></div>
+    <button class="card-save-btn" data-listing-id="${escapeHTML(row.id)}" aria-label="Save to list" title="Save to list">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+    </button>
     <div class="card__top"><h3>${escapeHTML(row.name)}</h3><div>Rating ${rating}</div></div>
     <div class="card__meta">${cap(row.category)} - ${escapeHTML(city)} - from GBP ${price}</div>
     <button class="btn" data-href="${url}">Book</button>
@@ -114,9 +120,17 @@ function attachHandlers() {
   if (resultsEl) {
     resultsEl.addEventListener('click', (event) => {
       const target = event.target;
-      if (target instanceof HTMLElement && target.matches('button[data-href]')) {
-        const href = target.getAttribute('data-href');
-        if (href) window.location.href = href;
+      if (target instanceof HTMLElement) {
+        if (target.matches('button[data-href]')) {
+          const href = target.getAttribute('data-href');
+          if (href) window.location.href = href;
+        } else if (target.matches('.card-save-btn') || target.closest('.card-save-btn')) {
+          const btn = target.matches('.card-save-btn') ? target : target.closest('.card-save-btn');
+          const listingId = btn.getAttribute('data-listing-id');
+          if (listingId) {
+            handleSaveToList(listingId, btn);
+          }
+        }
       }
     });
   }
@@ -141,6 +155,76 @@ function escapeHTML(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+async function handleSaveToList(listingId, buttonElement) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      alert('Please sign in to save listings to your list.');
+      window.location.href = 'signin.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+      return;
+    }
+
+    // Get or create default favorites list
+    const client = await sp();
+    let listId = 'default-favorites';
+    
+    try {
+      // Try to get the user's favorites list
+      const { data: lists, error: listError } = await client
+        .from('customer_lists')
+        .select('*')
+        .eq('customer_id', user.id)
+        .eq('name', 'Favorites')
+        .limit(1);
+      
+      if (listError) {
+        console.warn('[Search] customer_lists table may not exist, using fallback');
+      } else if (lists && lists.length > 0) {
+        listId = lists[0].id;
+      } else {
+        // Create a new favorites list
+        const { data: newList, error: createError } = await client
+          .from('customer_lists')
+          .insert({ customer_id: user.id, name: 'Favorites' })
+          .select()
+          .single();
+        
+        if (!createError && newList) {
+          listId = newList.id;
+        }
+      }
+      
+      // Add the listing to the list
+      const { error: addError } = await client
+        .from('list_items')
+        .insert({
+          list_id: listId,
+          listing_id: listingId
+        });
+      
+      if (addError) {
+        if (addError.code === '23505') {
+          alert('This listing is already in your favorites!');
+        } else {
+          console.error('[Search] Error adding to list:', addError);
+          alert('Unable to save to list. The feature may not be fully set up yet.');
+        }
+      } else {
+        // Visual feedback
+        buttonElement.classList.add('saved');
+        buttonElement.style.color = '#ff6b9d';
+        alert('Saved to your favorites!');
+      }
+    } catch (err) {
+      console.warn('[Search] Save to list feature not fully implemented:', err);
+      alert('Save to list feature coming soon!');
+    }
+  } catch (error) {
+    console.error('[Search] Error in handleSaveToList:', error);
+    alert('Unable to save listing. Please try again.');
+  }
 }
 
 async function init() {
