@@ -75,10 +75,11 @@ async function renderPhotoGallery(listingId) {
     
     const galleryHTML = `
       <h2 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Photos</h2>
-      <div class="photo-gallery-grid">
+      <div class="photo-gallery-grid" role="list">
         ${photos.map((photo, index) => `
-          <div class="photo-gallery-item" data-photo-index="${index}">
-            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1}" loading="lazy">
+          <div class="photo-gallery-item" role="listitem" data-photo-index="${index}">
+            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1} of ${photos.length}" loading="lazy">
+            <button type="button" aria-label="View photo ${index + 1} of ${photos.length} in full screen"></button>
           </div>
         `).join('')}
       </div>
@@ -86,12 +87,28 @@ async function renderPhotoGallery(listingId) {
     
     photoGalleryEl.innerHTML = galleryHTML;
     
-    // Add click handlers for lightbox
+    // Add click handlers for lightbox with better error handling
     photoGalleryEl.querySelectorAll('.photo-gallery-item').forEach((item) => {
-      item.addEventListener('click', () => {
-        const index = parseInt(item.getAttribute('data-photo-index'), 10);
-        openLightbox(index);
+      const button = item.querySelector('button');
+      const img = item.querySelector('img');
+      
+      // Handle image load errors
+      img.addEventListener('error', () => {
+        item.classList.add('photo-gallery-error');
+        console.error('[Listing] Failed to load image:', img.src);
       });
+      
+      // Handle successful image load
+      img.addEventListener('load', () => {
+        item.classList.remove('photo-gallery-error');
+      });
+      
+      if (button) {
+        button.addEventListener('click', () => {
+          const index = parseInt(item.getAttribute('data-photo-index'), 10);
+          openLightbox(index);
+        });
+      }
     });
   } catch (error) {
     console.error('[Listing] Error loading photos:', error);
@@ -106,11 +123,27 @@ function openLightbox(index) {
   currentPhotoIndex = index;
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCounter = lightbox?.querySelector('.lightbox-counter');
   
   if (lightbox && lightboxImg) {
     lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
+    lightboxImg.alt = `Listing photo ${currentPhotoIndex + 1} of ${galleryPhotos.length}`;
+    
+    // Update counter
+    if (lightboxCounter) {
+      lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
+    }
+    
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Focus the close button for accessibility after a brief delay to ensure the lightbox is visible
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    if (closeBtn) {
+      requestAnimationFrame(() => {
+        closeBtn.focus();
+      });
+    }
   }
 }
 
@@ -134,8 +167,17 @@ function navigateLightbox(direction) {
   }
   
   const lightboxImg = document.getElementById('lightbox-img');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxCounter = lightbox?.querySelector('.lightbox-counter');
+  
   if (lightboxImg) {
     lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
+    lightboxImg.alt = `Listing photo ${currentPhotoIndex + 1} of ${galleryPhotos.length}`;
+  }
+  
+  // Update counter
+  if (lightboxCounter) {
+    lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
   }
 }
 
