@@ -11,6 +11,9 @@ const listingsContainer = document.getElementById('listingsContainer');
 // Store photo carousel states
 const carouselStates = new Map();
 
+// Intersection Observer for lazy loading
+let intersectionObserver = null;
+
 /**
  * Escape HTML to prevent XSS
  */
@@ -41,6 +44,29 @@ function capitalize(str) {
 }
 
 /**
+ * Setup Intersection Observer for lazy loading images
+ */
+function setupIntersectionObserver() {
+  if ('IntersectionObserver' in window) {
+    intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          if (img.dataset.src) {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+            intersectionObserver.unobserve(img);
+          }
+        }
+      });
+    }, {
+      rootMargin: '50px 0px',
+      threshold: 0.01
+    });
+  }
+}
+
+/**
  * Render the photo carousel for a listing
  */
 function renderPhotoCarousel(listingId, photos) {
@@ -56,18 +82,22 @@ function renderPhotoCarousel(listingId, photos) {
   
   return `
     <div class="listing-photos-container" data-listing-id="${escapeHTML(listingId)}">
-      ${photos.map((photo, index) => `
-        <img 
-          class="listing-photo" 
-          src="${escapeHTML(photo.url)}" 
-          alt="Listing photo ${index + 1} of ${photos.length}"
-          loading="lazy"
-          onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('sr-only');"
-        >
-        <div class="listing-photo-placeholder sr-only">
-          <span>Photo failed to load</span>
-        </div>
-      `).join('')}
+      ${photos.map((photo, index) => {
+        // First image loads immediately, rest are lazy-loaded
+        const isFirst = index === 0;
+        return `
+          <img 
+            class="listing-photo" 
+            ${isFirst ? `src="${escapeHTML(photo.url)}"` : `data-src="${escapeHTML(photo.url)}"`}
+            alt="Listing photo ${index + 1} of ${photos.length}"
+            ${!isFirst ? 'loading="lazy"' : ''}
+            onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('sr-only');"
+          >
+          <div class="listing-photo-placeholder sr-only">
+            <span>Photo failed to load</span>
+          </div>
+        `;
+      }).join('')}
     </div>
     ${hasMultiplePhotos ? `
       <button class="photo-nav photo-nav-prev" data-listing-id="${escapeHTML(listingId)}" aria-label="Previous photo">
@@ -209,6 +239,13 @@ async function loadListings() {
 
     // Set up event handlers for photo navigation
     setupPhotoNavigation();
+    
+    // Setup lazy loading for images with data-src
+    if (intersectionObserver) {
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        intersectionObserver.observe(img);
+      });
+    }
 
   } catch (error) {
     console.error('[Listings] Error loading listings:', error);
@@ -259,6 +296,15 @@ function updateCarousel(listingId, state) {
 
   if (container) {
     container.style.transform = `translateX(-${state.currentIndex * 100}%)`;
+    
+    // Load next image if it has data-src
+    const images = container.querySelectorAll('.listing-photo');
+    const currentImg = images[state.currentIndex];
+    if (currentImg && currentImg.dataset.src && intersectionObserver) {
+      currentImg.src = currentImg.dataset.src;
+      currentImg.removeAttribute('data-src');
+      intersectionObserver.unobserve(currentImg);
+    }
   }
 
   if (counter) {
@@ -271,6 +317,7 @@ function updateCarousel(listingId, state) {
  */
 async function init() {
   console.log('[Listings] Initializing listings page...');
+  setupIntersectionObserver();
   await loadListings();
   console.log('[Listings] Listings page initialized successfully');
 }
