@@ -191,8 +191,9 @@ function createListCard(list, listings) {
   
   // Make card clickable
   card.addEventListener('click', () => {
-    // Navigate to a detail view (to be implemented)
-    window.location.href = `list-detail.html?id=${encodeURIComponent(list.id)}`;
+    // For now, show message that detail view is coming soon
+    // TODO: Implement list-detail.html page
+    alert('List details view coming soon! This will show all saved listings in this list.');
   });
   
   // Add keyboard support
@@ -242,5 +243,6 @@ export async function loadLists() {
   } catch (error) {
     console.error('[Lists] load', error);
     if (introEl) introEl.textContent = 'Failed to load lists. Please try again.';
+    if (gridEl) gridEl.innerHTML = '';
   }
 }

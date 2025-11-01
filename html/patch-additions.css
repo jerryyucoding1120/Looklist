@@ -43,6 +43,53 @@
   height:20px; 
 }
 
+/* Toast notification */
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #252728;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideInUp 0.3s ease;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+}
+.toast-notification.success {
+  border-color: #66bb6a;
+}
+.toast-notification.error {
+  border-color: #ef5350;
+}
+.toast-notification.info {
+  border-color: #42a5f5;
+}
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (max-width: 600px) {
+  .toast-notification {
+    bottom: calc(64px + env(safe-area-inset-bottom) + 1rem);
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
 .slot-list .slot{ display:block; padding:.6rem .8rem; border:1px solid #2a2a2a; border-radius:.7rem; margin:.4rem 0; background:#141414; }
 .lld-row{ display:flex; gap:.5rem; align-items:center; margin:.5rem 0; }
 .lld-row input{ width:8rem; }

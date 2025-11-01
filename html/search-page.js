@@ -157,12 +157,44 @@ function escapeHTML(value) {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Show a toast notification to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification (success, error, info)
+ * @param {number} duration - Duration in milliseconds (default 3000)
+ */
+function showToast(message, type = 'info', duration = 3000) {
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  
+  // Add icon based on type
+  let icon = '💡';
+  if (type === 'success') icon = '✓';
+  else if (type === 'error') icon = '✗';
+  
+  toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span>${escapeHTML(message)}</span>`;
+  
+  // Add to body
+  document.body.appendChild(toast);
+  
+  // Auto remove after duration
+  setTimeout(() => {
+    toast.style.animation = 'slideInUp 0.3s ease reverse';
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, duration);
+}
+
 async function handleSaveToList(listingId, buttonElement) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      alert('Please sign in to save listings to your list.');
-      window.location.href = 'signin.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+      showToast('Please sign in to save listings to your list.', 'info');
+      setTimeout(() => {
+        window.location.href = 'signin.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+      }, 1000);
       return;
     }
 
@@ -206,24 +238,24 @@ async function handleSaveToList(listingId, buttonElement) {
       
       if (addError) {
         if (addError.code === '23505') {
-          alert('This listing is already in your favorites!');
+          showToast('This listing is already in your favorites!', 'info');
         } else {
           console.error('[Search] Error adding to list:', addError);
-          alert('Unable to save to list. The feature may not be fully set up yet.');
+          showToast('Unable to save to list. Please ensure database tables are set up correctly.', 'error');
         }
       } else {
         // Visual feedback
         buttonElement.classList.add('saved');
         buttonElement.style.color = '#ff6b9d';
-        alert('Saved to your favorites!');
+        showToast('Saved to your favorites!', 'success');
       }
     } catch (err) {
       console.warn('[Search] Save to list feature not fully implemented:', err);
-      alert('Save to list feature coming soon!');
+      showToast('Save to list feature coming soon! Database tables may need to be created.', 'info', 4000);
     }
   } catch (error) {
     console.error('[Search] Error in handleSaveToList:', error);
-    alert('Unable to save listing. Please try again.');
+    showToast('Unable to save listing. Please try again later.', 'error');
   }
 }
 
