@@ -123,7 +123,10 @@ function attachHandlers() {
       if (target instanceof HTMLElement) {
         if (target.matches('button[data-href]')) {
           const href = target.getAttribute('data-href');
-          if (href) window.location.href = href;
+          // Validate href is a safe relative URL before navigation
+          if (href && (href.startsWith('listing.html') || href.startsWith('./listing.html'))) {
+            window.location.href = href;
+          }
         } else if (target.matches('.card-save-btn') || target.closest('.card-save-btn')) {
           const btn = target.matches('.card-save-btn') ? target : target.closest('.card-save-btn');
           const listingId = btn.getAttribute('data-listing-id');
