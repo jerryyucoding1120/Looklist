@@ -78,7 +78,7 @@ async function renderPhotoGallery(listingId) {
       <div class="photo-gallery-grid" role="list">
         ${photos.map((photo, index) => `
           <div class="photo-gallery-item" role="listitem" data-photo-index="${index}">
-            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1} of ${photos.length}" loading="lazy" width="200" height="200">
+            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1} of ${photos.length}" loading="lazy">
             <button type="button" aria-label="View photo ${index + 1} of ${photos.length} in full screen"></button>
           </div>
         `).join('')}
@@ -137,10 +137,12 @@ function openLightbox(index) {
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
     
-    // Focus the close button for accessibility
+    // Focus the close button for accessibility after a brief delay to ensure the lightbox is visible
     const closeBtn = lightbox.querySelector('.lightbox-close');
     if (closeBtn) {
-      setTimeout(() => closeBtn.focus(), 100);
+      requestAnimationFrame(() => {
+        closeBtn.focus();
+      });
     }
   }
 }
