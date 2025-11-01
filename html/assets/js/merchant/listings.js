@@ -138,12 +138,27 @@ async function main(){
     input.disabled = true;
     const status = document.querySelector(`#imgs-${cssEscape(listingId)} .upload-status`);
     if (status) status.textContent = `Uploading ${files.length} file(s)…`;
+    
     const results = await uploadListingImages(listingId, files);
     const errs = results.filter(r => r.error);
+    
     if (status) {
-      status.textContent = errs.length ? `Uploaded with ${errs.length} error(s)` : `Upload complete`;
-      setTimeout(() => status.textContent = '', 1500);
+      if (errs.length === 0) {
+        status.textContent = `✓ Successfully uploaded ${files.length} photo(s). Changes are immediately visible to customers.`;
+        status.style.color = '#a5d6a7';
+      } else if (errs.length < files.length) {
+        status.textContent = `⚠ Uploaded ${files.length - errs.length} of ${files.length} photo(s). ${errs.length} failed.`;
+        status.style.color = '#ffb74d';
+      } else {
+        status.textContent = `✗ Upload failed for all ${files.length} photo(s).`;
+        status.style.color = '#ef5350';
+      }
+      setTimeout(() => {
+        status.textContent = '';
+        status.style.color = '';
+      }, 3000);
     }
+    
     input.value = '';
     input.disabled = false;
     await renderListingImages(listingId);
@@ -290,10 +305,27 @@ document.addEventListener('drop', async (e) => {
   const listingId = zone.getAttribute('data-drop');
   const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
   if (!files.length) return;
+  
   const status = zone.querySelector('.upload-status');
   if (status) status.textContent = `Uploading ${files.length} file(s)…`;
-  await uploadListingImages(listingId, files);
-  if (status) { status.textContent = 'Upload complete'; setTimeout(() => status.textContent = '', 1200); }
+  
+  const results = await uploadListingImages(listingId, files);
+  const errs = results.filter(r => r.error);
+  
+  if (status) {
+    if (errs.length === 0) {
+      status.textContent = `✓ Successfully uploaded ${files.length} photo(s). Visible to customers now!`;
+      status.style.color = '#a5d6a7';
+    } else {
+      status.textContent = `⚠ Uploaded ${files.length - errs.length} of ${files.length} photo(s).`;
+      status.style.color = '#ffb74d';
+    }
+    setTimeout(() => {
+      status.textContent = '';
+      status.style.color = '';
+    }, 3000);
+  }
+  
   await renderListingImages(listingId);
 });
 
