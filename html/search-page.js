@@ -81,11 +81,10 @@ async function loadListingThumbnail(listingId) {
 }
 
 function rowToCard(row) {
-  const url = `listing.html?id=${row.id}&category=${encodeURIComponent(state.category)}`;
   const rating = row.rating ?? 'N/A';
   const city = row.city || '';
   const price = row.price_from ?? 'N/A';
-  return `<article class="card" data-listing-id="${escapeHTML(row.id)}">
+  return `<article class="card" data-listing-id="${escapeHTML(row.id)}" data-category="${escapeHTML(state.category)}">
     <div class="card-thumbnail card-thumbnail-placeholder"></div>
     <button class="card-save-btn" data-listing-id="${escapeHTML(row.id)}" aria-label="Save to list" title="Save to list">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -94,7 +93,7 @@ function rowToCard(row) {
     </button>
     <div class="card__top"><h3>${escapeHTML(row.name)}</h3><div>Rating ${rating}</div></div>
     <div class="card__meta">${cap(row.category)} - ${escapeHTML(city)} - from GBP ${price}</div>
-    <button class="btn" data-href="${url}">Book</button>
+    <button class="btn btn-view-listing">Book</button>
   </article>`;
 }
 
@@ -121,13 +120,21 @@ function attachHandlers() {
     resultsEl.addEventListener('click', (event) => {
       const target = event.target;
       if (target instanceof HTMLElement) {
-        if (target.matches('button[data-href]')) {
-          const href = target.getAttribute('data-href');
-          // Validate href is a safe relative URL before navigation
-          if (href && (href.startsWith('listing.html') || href.startsWith('./listing.html'))) {
-            window.location.href = href;
+        // Handle "Book" button click
+        if (target.matches('.btn-view-listing')) {
+          const card = target.closest('.card');
+          if (card) {
+            const listingId = card.getAttribute('data-listing-id');
+            const category = card.getAttribute('data-category');
+            if (listingId) {
+              // Construct URL from validated data attributes instead of reading href
+              const url = `listing.html?id=${encodeURIComponent(listingId)}&category=${encodeURIComponent(category || '')}`;
+              window.location.assign(url);
+            }
           }
-        } else if (target.matches('.card-save-btn') || target.closest('.card-save-btn')) {
+        } 
+        // Handle save button click
+        else if (target.matches('.card-save-btn') || target.closest('.card-save-btn')) {
           const btn = target.matches('.card-save-btn') ? target : target.closest('.card-save-btn');
           const listingId = btn.getAttribute('data-listing-id');
           if (listingId) {
