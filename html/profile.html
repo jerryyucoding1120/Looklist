@@ -151,7 +151,11 @@
     <script type="module">
     import { authInit, signOut } from './auth.js';
 
-    document.getElementById('signout-btn').onclick = signOut;
+    // Wire up the sign-out button
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+      signoutBtn.onclick = signOut;
+    }
 
     authInit({ requireAuth: true }).then(({ user }) => {
       const signInLinks = document.querySelectorAll('[data-auth="signin"]');
