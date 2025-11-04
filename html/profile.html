@@ -110,7 +110,7 @@
     <div class="section">
       <h3>Account</h3>
       <p class="muted">Update your details, password, and notifications.</p>
-      <a href="#" class="btn" onclick="authSignOut(); return false;">Sign out</a>
+      <a href="#" class="btn" id="signout-btn">Sign out</a>
     </div>
     <div class="section" style="margin-top:1rem;">
       <h3>Payments</h3>
@@ -150,6 +150,12 @@
   </nav>
     <script type="module">
     import { authInit, signOut } from './auth.js';
+
+    // Wire up the sign-out button
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+      signoutBtn.onclick = signOut;
+    }
 
     authInit({ requireAuth: true }).then(({ user }) => {
       const signInLinks = document.querySelectorAll('[data-auth="signin"]');
