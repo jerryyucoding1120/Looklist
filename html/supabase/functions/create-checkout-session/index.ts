@@ -5,8 +5,9 @@
 // - Returns: { url } for Stripe-hosted checkout
 //
 // Notes:
-// - Requires secrets: STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, SITE_URL
+// - Requires secrets: STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
 // - CORS enabled for static site usage
+// - Redirect URLs are dynamically determined from request headers
 
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,7 +22,6 @@ const corsHeaders = {
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const SITE_URL = Deno.env.get("SITE_URL") || "https://jerryyucoding1120.github.io/LookList";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 
@@ -80,6 +80,11 @@ Deno.serve(async (req) => {
 
     const productName = `${listing?.name || "Service"}${slot.label ? " · " + slot.label : ""} (${slot.date} ${slot.start_time}–${slot.end_time})`;
 
+    // Dynamically determine the redirect URL from request headers
+    const siteUrl = req.headers.get('origin') || new URL(req.url).origin;
+    const successUrl = new URL(`/Looklist/html/bookings.html?stripe=success`, siteUrl).toString();
+    const cancelUrl = new URL(`/Looklist/html/index.html?stripe=cancel`, siteUrl).toString();
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
@@ -100,8 +105,8 @@ Deno.serve(async (req) => {
         price_pence: String(pricePence),
         lld_to_redeem: String(redeem),
       },
-      success_url: `${SITE_URL}/profile.html?paid=1`,
-      cancel_url: `${SITE_URL}/listing.html?id=${listing_id}&canceled=1`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
 
     return json({ url: session.url }, 200);
