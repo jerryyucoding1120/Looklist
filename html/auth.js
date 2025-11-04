@@ -358,6 +358,7 @@ export async function signOut({ scope = 'global' } = {}) {
     spSession.auth.signOut({ scope }),
   ]);
   clearStoredAuthFlowType();
+  window.location.assign(toAbsoluteUrl('signin.html'));
 }
 
 export async function resetPasswordForEmail(email, redirectTo = 'reset.html') {
