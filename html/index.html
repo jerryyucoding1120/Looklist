@@ -490,5 +490,26 @@
     }
   })();
 </script>
+<script type="module">
+import { authInit, signOut } from './auth.js';
+
+authInit().then(({ user }) => {
+  const links = document.querySelectorAll('[data-auth="signin"]');
+  links.forEach((el) => {
+    if (user) {
+      el.textContent = 'Sign Out';
+      el.onclick = (event) => {
+        event.preventDefault();
+        signOut();
+      };
+      el.setAttribute('href', '#');
+    } else {
+      el.textContent = 'Sign in';
+      el.onclick = null;
+      el.setAttribute('href', 'signin.html');
+    }
+  });
+});
+</script>
 </body>
 </html>
