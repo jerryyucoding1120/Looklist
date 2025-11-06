@@ -33,7 +33,7 @@ export const spLocal = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // Manual URL handling via auth.js
   },
 });
 
@@ -42,7 +42,7 @@ export const spSession = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // Manual URL handling via auth.js
   },
 });
 
