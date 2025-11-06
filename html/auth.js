@@ -4,13 +4,8 @@
    - Exposes helpers for init, sign-in/out, password flows, signup, and URL session handling
 */
 
-const SUPABASE_JS_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
+import { spLocal, spSession } from './supabase-client.js';
 
-let spLocal;
-let spSession;
-let supabaseScriptPromise;
 let urlSessionPromise;
 
 const FLOW_TYPE_KEY = 'looklist.auth.flowType';
@@ -43,7 +38,6 @@ function storageFromWindow(key) {
   }
 }
 
-const localPersist = () => storageFromWindow('localStorage');
 const sessionPersist = () => storageFromWindow('sessionStorage');
 
 function toAbsoluteUrl(path) {
@@ -63,54 +57,8 @@ function toAbsoluteUrl(path) {
   }
 }
 
-async function loadSupabase() {
-  if (window.supabase?.createClient) return;
-  if (!supabaseScriptPromise) {
-    supabaseScriptPromise = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = SUPABASE_JS_URL;
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = (event) => {
-        supabaseScriptPromise = undefined;
-        reject(event);
-      };
-      document.head.appendChild(script);
-    });
-  }
-  await supabaseScriptPromise;
-}
-
 async function ensureClientsReady() {
-  if (spLocal && spSession) {
-    return { spLocal, spSession };
-  }
-
-  await loadSupabase();
-  const createClient = window.supabase.createClient;
-
-  spLocal = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: true,
-      storage: localPersist(),
-      /* 
-      autoRefreshToken: true,
-      */
-      detectSessionInUrl: false,
-    },
-  });
-
-  spSession = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: true,
-      storage: sessionPersist(),
-      /* 1
-      autoRefreshToken: true,
-      */
-      detectSessionInUrl: false,
-    },
-  });
-
+  // Clients are already initialized from the imported module
   return { spLocal, spSession };
 }
 

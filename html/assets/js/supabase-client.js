@@ -21,6 +21,38 @@ const SUPABASE_ANON_KEY =
 // Export for debugging - consumers can check which project is in use
 export const __SUPABASE_URL = SUPABASE_URL;
 
+// In-memory storage fallback for when localStorage/sessionStorage are unavailable
+const memoryStorage = (() => {
+  let store = new Map();
+  return {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => {
+      store.set(key, String(value));
+    },
+    removeItem: (key) => {
+      store.delete(key);
+    },
+  };
+})();
+
+// Helper to get storage with fallback
+function storageFromWindow(key) {
+  try {
+    const target = window[key];
+    if (!target) return memoryStorage;
+    const testKey = '__looklist_supabase__test__';
+    target.setItem(testKey, '1');
+    target.removeItem(testKey);
+    return target;
+  } catch (error) {
+    console.warn(`[supabase-client] Falling back to in-memory storage for ${key}`, error);
+    return memoryStorage;
+  }
+}
+
+const localPersist = () => storageFromWindow('localStorage');
+const sessionPersist = () => storageFromWindow('sessionStorage');
+
 // Log resolved config once for debugging
 if (!window.__supabaseClientLogged) {
   const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0];
@@ -32,17 +64,19 @@ if (!window.__supabaseClientLogged) {
 export const spLocal = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
+    storage: localPersist(), // Custom storage with fallback
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // Manual URL handling via auth.js
   },
 });
 
 // Session-only client (clears when tab/browser closes)
 export const spSession = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: false,
+    persistSession: true,
+    storage: sessionPersist(), // Custom storage with fallback
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // Manual URL handling via auth.js
   },
 });
 
