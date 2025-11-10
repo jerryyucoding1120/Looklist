@@ -9,7 +9,7 @@
 // - Requires secrets: STRIPE_WEBHOOK_SECRET, STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 import Stripe from "npm:stripe@14.25.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
           .from("availability")
           .select("booked_count")
           .eq("id", availabilityId)
-          .single();
+          .maybeSingle();
 
         if (slot) {
           await supabase
