@@ -1,5 +1,17 @@
 import { getAuthClients } from './auth.js';
 import { listListingPhotos } from './storage.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Public anonymous client for fetching public data (listings, availability)
+// This ensures RLS policies correctly allow public access to active listings
+const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
+const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
 
 const searchParams = new URLSearchParams(window.location.search);
 const listingId = searchParams.get('id');
@@ -314,13 +326,12 @@ async function loadData() {
     return;
   }
 
-  const { spLocal } = await clientsPromise;
   const today = new Date().toISOString().slice(0, 10);
   const in14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
 
   const [listingResult, availabilityResult] = await Promise.all([
-    spLocal.from('listings').select('*').eq('id', listingId).single(),
-    spLocal
+    publicClient.from('listings').select('*').eq('id', listingId).single(),
+    publicClient
       .from('availability')
       .select('*')
       .eq('listing_id', listingId)
