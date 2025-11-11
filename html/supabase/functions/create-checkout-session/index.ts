@@ -10,7 +10,7 @@
 // - Redirect URLs are dynamically determined from request headers
 
 import Stripe from "npm:stripe@14.25.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*", // Or whitelist your frontend domain
