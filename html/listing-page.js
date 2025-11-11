@@ -1,5 +1,4 @@
 import { getAuthClients } from './auth.js';
-import { listListingPhotos } from './storage.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // Public anonymous client for fetching public data (listings, availability)
@@ -77,7 +76,36 @@ async function renderPhotoGallery(listingId) {
   photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
   
   try {
-    const photos = await listListingPhotos(listingId);
+    // Fetch photos using publicClient to ensure public access
+    const LISTING_IMAGES_BUCKET = 'listing-photos';
+    const { data, error } = await publicClient.storage
+      .from(LISTING_IMAGES_BUCKET)
+      .list(listingId, { 
+        limit: 100, 
+        offset: 0, 
+        sortBy: { column: 'created_at', order: 'asc' } 
+      });
+    
+    if (error) {
+      console.error('[Listing] Error listing photos for listing:', listingId, 'Error:', error);
+      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">Unable to load photos.</div>';
+      return;
+    }
+    
+    // Filter image files and generate public URLs
+    const photos = (data || [])
+      .filter(f => f.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name))
+      .map((f) => {
+        const path = `${listingId}/${f.name}`;
+        const { data: urlData } = publicClient.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
+        return {
+          name: f.name,
+          path,
+          url: urlData.publicUrl,
+          created_at: f.created_at
+        };
+      });
+    
     galleryPhotos = photos;
     
     if (!photos || photos.length === 0) {
