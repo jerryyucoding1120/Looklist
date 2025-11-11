@@ -12,6 +12,9 @@ const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+// Correct bucket name for listing photos
+const LISTING_IMAGES_BUCKET = 'listing-photos';
+
 const searchParams = new URLSearchParams(window.location.search);
 const listingId = searchParams.get('id');
 
@@ -77,7 +80,6 @@ async function renderPhotoGallery(listingId) {
   
   try {
     // Fetch photos using publicClient to ensure public access
-    const LISTING_IMAGES_BUCKET = 'listing-photos';
     const { data, error } = await publicClient.storage
       .from(LISTING_IMAGES_BUCKET)
       .list(listingId, { 
