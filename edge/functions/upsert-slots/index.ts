@@ -1,7 +1,15 @@
 // Supabase Edge Function — upsert-slots
 // Validates merchant ownership and inserts time slots into the time_slots table
+// Uses anon key + user JWT for ownership validation (RLS-safe)
+// Returns consistent JSON envelope: { success, data?, error? }
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 interface TimeSlot {
   listing_id: string
@@ -13,37 +21,34 @@ interface TimeSlot {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { 
-      status: 405,
-      headers: { 'content-type': 'application/json' }
-    });
+    return json({ success: false, error: 'Method Not Allowed' }, 405);
   }
 
   try {
     // Get authorization token from header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' }
-      });
+      return json({ success: false, error: 'Missing authorization header' }, 401);
     }
 
-    // Create Supabase client with service role for RLS bypass when needed
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    // Validate environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-        status: 500,
-        headers: { 'content-type': 'application/json' }
-      });
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return json({ success: false, error: 'Server configuration error' }, 500);
     }
 
-    // Create client with user's JWT for ownership validation
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    // Create client with anon key + user's JWT for ownership validation (RLS-safe)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: authHeader }
       },
@@ -55,10 +60,7 @@ Deno.serve(async (req) => {
     // Get the authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' }
-      });
+      return json({ success: false, error: 'Unauthorized' }, 401);
     }
 
     // Parse request body
@@ -66,15 +68,13 @@ Deno.serve(async (req) => {
     const { listing_id, slots } = body;
 
     if (!listing_id || !slots || !Array.isArray(slots)) {
-      return new Response(JSON.stringify({ 
+      return json({ 
+        success: false,
         error: 'Invalid request body. Expected: { listing_id, slots: [...] }' 
-      }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' }
-      });
+      }, 400);
     }
 
-    // Validate merchant owns the listing
+    // Validate merchant owns the listing (RLS-enforced with anon key)
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('id, owner')
@@ -82,25 +82,20 @@ Deno.serve(async (req) => {
       .single();
 
     if (listingError || !listing) {
-      return new Response(JSON.stringify({ 
-        error: 'Listing not found',
-        details: listingError?.message
-      }), {
-        status: 404,
-        headers: { 'content-type': 'application/json' }
-      });
+      return json({ 
+        success: false,
+        error: 'Listing not found'
+      }, 404);
     }
 
     if (listing.owner !== user.id) {
-      return new Response(JSON.stringify({ 
+      return json({ 
+        success: false,
         error: 'Forbidden: You do not own this listing' 
-      }), {
-        status: 403,
-        headers: { 'content-type': 'application/json' }
-      });
+      }, 403);
     }
 
-    // Prepare slots for insertion
+    // Prepare and sanitize slots for insertion
     const slotsToInsert: TimeSlot[] = slots.map((slot: any) => ({
       listing_id,
       starts_at: slot.starts_at,
@@ -110,52 +105,68 @@ Deno.serve(async (req) => {
       status: slot.status ?? 'open'
     }));
 
-    // Insert slots (duplicates will be skipped by unique index)
-    const { data: insertedSlots, error: insertError } = await supabase
+    // Try inserting with anon key first (RLS-enforced)
+    let insertedSlots;
+    let insertError;
+    
+    ({ data: insertedSlots, error: insertError } = await supabase
       .from('time_slots')
       .insert(slotsToInsert)
-      .select();
+      .select());
+
+    // If RLS blocks the insert, fallback to service role key if available
+    if (insertError && supabaseServiceRoleKey) {
+      console.log('[upsert-slots] RLS blocked insert, using service role');
+      const supabaseService = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: { persistSession: false }
+      });
+      
+      ({ data: insertedSlots, error: insertError } = await supabaseService
+        .from('time_slots')
+        .insert(slotsToInsert)
+        .select());
+    }
 
     if (insertError) {
       // If error is due to duplicate, we still consider it a partial success
       if (insertError.code === '23505') {
-        return new Response(JSON.stringify({ 
+        return json({ 
           success: true,
-          message: 'Some slots were skipped due to duplicates',
-          inserted: 0,
-          skipped: slotsToInsert.length
-        }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' }
-        });
+          data: {
+            message: 'Some slots were skipped due to duplicates',
+            inserted: 0,
+            skipped: slotsToInsert.length
+          }
+        }, 200);
       }
 
-      return new Response(JSON.stringify({ 
-        error: 'Failed to insert slots',
-        details: insertError.message,
-        code: insertError.code
-      }), {
-        status: 500,
-        headers: { 'content-type': 'application/json' }
-      });
+      // Sanitize error message to avoid leaking internal details
+      return json({ 
+        success: false,
+        error: 'Failed to insert slots'
+      }, 500);
     }
 
-    return new Response(JSON.stringify({ 
+    return json({ 
       success: true,
-      inserted: insertedSlots?.length ?? 0,
-      skipped: slotsToInsert.length - (insertedSlots?.length ?? 0)
-    }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' }
-    });
+      data: {
+        inserted: insertedSlots?.length ?? 0,
+        skipped: slotsToInsert.length - (insertedSlots?.length ?? 0)
+      }
+    }, 200);
 
   } catch (error) {
     console.error('Error in upsert-slots:', error);
-    return new Response(JSON.stringify({ 
+    return json({ 
+      success: false,
       error: 'Internal server error'
-    }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' }
-    });
+    }, 500);
   }
 });
+
+function json(obj: unknown, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}

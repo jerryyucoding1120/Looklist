@@ -328,9 +328,16 @@ async function handleBooking(listing) {
       },
     });
     
+    // Handle function invocation errors
     if (error) throw new Error(error.message || 'Failed to start checkout.');
-    if (!data?.url) throw new Error('No checkout URL returned.');
-    window.location.href = data.url;
+    
+    // Handle response envelope with { success, data?, error? }
+    if (!data?.success) {
+      throw new Error(data?.error || 'Failed to start checkout.');
+    }
+    
+    if (!data?.data?.url) throw new Error('No checkout URL returned.');
+    window.location.href = data.data.url;
   } catch (error) {
     alert(error?.message || 'Unable to start checkout.');
   }
