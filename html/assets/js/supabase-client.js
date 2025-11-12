@@ -1,5 +1,15 @@
 // supabase-client.js
-// Single source of truth for Supabase client configuration.
+// ⚠️ SINGLE SOURCE OF TRUTH FOR SUPABASE CLIENT CONFIGURATION ⚠️
+// 
+// This file is the ONLY place where createClient() should be called.
+// All other files must import { sb } from this file or its re-export shims.
+//
+// DO NOT create new Supabase client instances elsewhere - it causes:
+//  - Session/auth conflicts between pages
+//  - Missing Authorization headers on Edge Function calls
+//  - Stripe checkout errors ("You did not provide an API key")
+//
+// See AUTH.md for full documentation.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // Optionally configure via <meta> tags or window.ENV
@@ -80,5 +90,7 @@ export const spSession = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
-// Default: persistent
+// Default export: persistent client (recommended for most use cases)
+// Use this for all database queries, storage operations, and Edge Function calls.
+// This ensures consistent session state and automatic JWT attachment.
 export const sb = spLocal;
