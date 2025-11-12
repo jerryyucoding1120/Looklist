@@ -1,16 +1,7 @@
-import { getAuthClients } from './auth.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { getAuthClients, getSupabase } from './auth.js';
 
-// Public anonymous client for fetching public data (listings, availability)
-// This ensures RLS policies correctly allow public access to active listings
-const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
-const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+// Get the authenticated Supabase client for all operations
+const publicClientPromise = getSupabase();
 
 // Correct bucket name for listing photos
 const LISTING_IMAGES_BUCKET = 'listing-photos';
@@ -79,6 +70,7 @@ async function renderPhotoGallery(listingId) {
   photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
   
   try {
+    const publicClient = await publicClientPromise;
     // Fetch photos using publicClient to ensure public access
     const { data, error } = await publicClient.storage
       .from(LISTING_IMAGES_BUCKET)
@@ -356,6 +348,7 @@ async function loadData() {
     return;
   }
 
+  const publicClient = await publicClientPromise;
   const today = new Date().toISOString().slice(0, 10);
   const in14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
 
