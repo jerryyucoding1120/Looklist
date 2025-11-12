@@ -201,6 +201,11 @@ export async function getAuthClients() {
   return ensureClientsReady();
 }
 
+export async function getSupabase() {
+  const { spLocal } = await ensureClientsReady();
+  return spLocal;
+}
+
 export async function authInit(options = {}) {
   const {
     requireAuth = false,
