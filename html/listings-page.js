@@ -1,20 +1,11 @@
 /**
  * Listings Page - Customer-facing page to browse all listings with photos
  * Dynamically syncs and displays photos uploaded by merchants
+ * 
+ * Uses unified Supabase client to ensure consistent auth state across all pages.
  */
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-// Public anonymous client for fetching public data (listings, photos)
-// This ensures RLS policies correctly allow public access to active listings
-const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
-const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+import { sb } from './supabase-client.js';
 
 // Correct bucket name for listing photos
 const LISTING_IMAGES_BUCKET = 'listing-photos';
@@ -180,7 +171,7 @@ function renderListingCard(listing, photos) {
  */
 async function loadListingPhotos(listingId) {
   try {
-    const { data, error } = await publicClient.storage
+    const { data, error } = await sb.storage
       .from(LISTING_IMAGES_BUCKET)
       .list(listingId, { 
         limit: 100, 
@@ -198,7 +189,7 @@ async function loadListingPhotos(listingId) {
       .filter(f => f.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name))
       .map((f) => {
         const path = `${listingId}/${f.name}`;
-        const { data: urlData } = publicClient.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
+        const { data: urlData } = sb.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
         return {
           name: f.name,
           path,
@@ -226,8 +217,8 @@ async function loadListings() {
   try {
     listingsContainer.innerHTML = '<div class="loading">Loading listings...</div>';
     
-    // Fetch all active listings using publicClient
-    const { data: listings, error } = await publicClient
+    // Fetch all active listings using unified client
+    const { data: listings, error } = await sb
       .from('listings')
       .select('*')
       .eq('active', true)

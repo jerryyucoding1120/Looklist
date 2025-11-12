@@ -1,16 +1,7 @@
+// Use unified Supabase client to ensure consistent auth state across all pages
+// This prevents session conflicts and ensures Authorization headers are properly attached
+import { sb } from './supabase-client.js';
 import { getAuthClients } from './auth.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-// Public anonymous client for fetching public data (listings, availability)
-// This ensures RLS policies correctly allow public access to active listings
-const SUPABASE_URL = 'https://rgzdgeczrncuxufkyuxf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnemRnZWN6cm5jdXh1Zmt5dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTI3MTAsImV4cCI6MjA3MTc2ODcxMH0.dYt-MxnGZZqQ-pUilyMzcqSJjvlCNSvUCYpVJ6TT7dU';
-const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
 
 // Correct bucket name for listing photos
 const LISTING_IMAGES_BUCKET = 'listing-photos';
@@ -79,8 +70,8 @@ async function renderPhotoGallery(listingId) {
   photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
   
   try {
-    // Fetch photos using publicClient to ensure public access
-    const { data, error } = await publicClient.storage
+    // Fetch photos using unified client
+    const { data, error } = await sb.storage
       .from(LISTING_IMAGES_BUCKET)
       .list(listingId, { 
         limit: 100, 
@@ -99,7 +90,7 @@ async function renderPhotoGallery(listingId) {
       .filter(f => f.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name))
       .map((f) => {
         const path = `${listingId}/${f.name}`;
-        const { data: urlData } = publicClient.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
+        const { data: urlData } = sb.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
         return {
           name: f.name,
           path,
@@ -328,22 +319,18 @@ async function handleBooking(listing) {
   const maxRedeemable = Math.min(lldSelected, Math.floor(slotPrice * 100));
 
   try {
-    const response = await fetch('https://rgzdgeczrncuxufkyuxf.supabase.co/functions/v1/create-checkout-session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    // Use unified client to invoke Edge Function - ensures Authorization header is attached
+    const { data, error } = await sb.functions.invoke('create-checkout-session', {
+      body: {
         listing_id: listing.id,
         availability_id: selectedSlotId,
         lld_to_redeem: maxRedeemable,
-      }),
+      },
     });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error || 'Failed to start checkout.');
-    if (!body.url) throw new Error('No checkout URL returned.');
-    window.location.href = body.url;
+    
+    if (error) throw new Error(error.message || 'Failed to start checkout.');
+    if (!data?.url) throw new Error('No checkout URL returned.');
+    window.location.href = data.url;
   } catch (error) {
     alert(error?.message || 'Unable to start checkout.');
   }
@@ -360,8 +347,8 @@ async function loadData() {
   const in14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
 
   const [listingResult, availabilityResult] = await Promise.all([
-    publicClient.from('listings').select('*').eq('id', listingId).single(),
-    publicClient
+    sb.from('listings').select('*').eq('id', listingId).single(),
+    sb
       .from('availability')
       .select('*')
       .eq('listing_id', listingId)
