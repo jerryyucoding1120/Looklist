@@ -104,6 +104,37 @@ const { data, error } = await sb.functions.invoke('create-checkout-session', {
     lld_to_redeem: amount,
   },
 });
+
+// Handle function invocation errors
+if (error) {
+  throw new Error(error.message || 'Failed to invoke function');
+}
+
+// Handle response envelope with { success, data?, error? }
+if (!data?.success) {
+  throw new Error(data?.error || 'Function returned an error');
+}
+
+// Access nested data
+const checkoutUrl = data.data.url;
+```
+
+**Edge Function Response Format**
+
+All edge functions return a consistent JSON envelope:
+
+```typescript
+// Success response
+{
+  success: true,
+  data: { /* function-specific data */ }
+}
+
+// Error response
+{
+  success: false,
+  error: "Error message"
+}
 ```
 
 **❌ INCORRECT: Manual fetch without unified client**
@@ -206,6 +237,52 @@ The unified client uses localStorage by default with automatic fallback to in-me
 
 **Solution**: Remove any custom client instances. Let `auth.js` handle URL token processing, and use the unified client for all other operations.
 
+## Edge Function Best Practices
+
+### Security Patterns
+
+Edge functions follow these security patterns:
+
+1. **Authentication**: All protected edge functions validate the JWT token from the Authorization header
+2. **RLS-Safe Queries**: Use anon key + user JWT for database queries to enforce Row Level Security
+3. **Service Role Usage**: Only use service role key when absolutely necessary (e.g., operations that bypass RLS intentionally)
+4. **Error Sanitization**: Avoid leaking internal error details to clients
+5. **Environment Validation**: Validate all required environment variables at startup
+
+### Edge Function Architecture
+
+**create-checkout-session**:
+- Uses `SUPABASE_ANON_KEY` (not service role) for RLS-enforced queries
+- Validates user ownership through JWT authentication
+- Returns `{ success: true, data: { url } }` on success
+- Sanitizes error messages before returning to client
+
+**upsert-slots**:
+- Uses `SUPABASE_ANON_KEY` for ownership validation (RLS-enforced)
+- Falls back to service role only if RLS blocks legitimate inserts
+- Includes OPTIONS handler for CORS preflight
+- Returns `{ success: true, data: { inserted, skipped } }` on success
+
+### CORS Configuration
+
+All edge functions include proper CORS headers:
+
+```typescript
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+```
+
+And handle OPTIONS preflight requests:
+
+```typescript
+if (req.method === 'OPTIONS') {
+  return new Response('ok', { headers: corsHeaders });
+}
+```
+
 ## Verification Checklist
 
 Before deploying changes:
@@ -214,6 +291,9 @@ Before deploying changes:
 - [ ] No UMD script tag for Supabase in any HTML file
 - [ ] No hardcoded `SUPABASE_ANON_KEY` outside unified client file
 - [ ] All Edge Function calls use `sb.functions.invoke()`
+- [ ] Edge functions return consistent `{ success, data?, error? }` envelope
+- [ ] Edge functions use anon key + JWT for RLS-enforced operations
+- [ ] Edge functions include CORS headers and OPTIONS handler
 - [ ] Session persists when navigating between pages
 - [ ] Checkout flow completes successfully (Stripe session created)
 - [ ] Only one set of Supabase storage keys in browser DevTools → Application → Storage

@@ -1,6 +1,6 @@
 // slot-editor.js
 // Frontend logic for generating and managing time slots
-import { sb, __SUPABASE_URL } from './supabase-client.js';
+import { sb } from './supabase-client.js';
 
 /**
  * Fetches merchant's listings to populate the listing dropdown
@@ -116,33 +116,25 @@ export function buildTimeSlots(params) {
  * @returns {Promise} Result from the edge function
  */
 export async function upsertSlots(listingId, slots) {
-  // Get the current session token
-  const { data: { session }, error: sessionError } = await sb.auth.getSession();
-  
-  if (sessionError || !session) {
-    throw new Error('Not authenticated');
-  }
-
-  const edgeFunctionUrl = `${__SUPABASE_URL}/functions/v1/upsert-slots`;
-
-  const response = await fetch(edgeFunctionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`
-    },
-    body: JSON.stringify({
+  // Use unified client to invoke Edge Function - ensures Authorization header is attached
+  const { data, error } = await sb.functions.invoke('upsert-slots', {
+    body: {
       listing_id: listingId,
       slots: slots
-    })
+    }
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-    throw new Error(errorData.error || errorData.details || `HTTP ${response.status}: ${response.statusText}`);
+  // Handle function invocation errors
+  if (error) {
+    throw new Error(error.message || 'Failed to invoke upsert-slots');
   }
 
-  return await response.json();
+  // Handle response envelope with { success, data?, error? }
+  if (!data?.success) {
+    throw new Error(data?.error || 'Failed to upsert slots');
+  }
+
+  return data;
 }
 
 /**
@@ -280,7 +272,9 @@ async function handleGenerateSlots(form, container) {
     const result = await upsertSlots(listingId, slots);
 
     if (result.success) {
-      const message = `Success! Inserted ${result.inserted} new slots${result.skipped > 0 ? `, skipped ${result.skipped} duplicates` : ''}`;
+      const inserted = result.data?.inserted ?? 0;
+      const skipped = result.data?.skipped ?? 0;
+      const message = `Success! Inserted ${inserted} new slots${skipped > 0 ? `, skipped ${skipped} duplicates` : ''}`;
       if (statusDiv) {
         statusDiv.textContent = message;
         statusDiv.style.color = '#a5d6a7';
