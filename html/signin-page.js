@@ -90,6 +90,39 @@ function validate() {
   return valid;
 }
 
+/**
+ * Validate and sanitize the next parameter to prevent open redirect
+ * Only allows relative paths within the application
+ */
+function getSafeNextPage() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const next = urlParams.get('next');
+    
+    if (!next) return 'index.html';
+    
+    // Only allow relative paths (no protocol, no domain, no absolute paths)
+    if (next.includes('://') || next.startsWith('//') || next.startsWith('http')) {
+      console.warn('[Signin] Blocked suspicious next parameter:', next);
+      return 'index.html';
+    }
+    
+    // Remove any potential path traversal
+    const normalized = next.replace(/\.\./g, '').replace(/^\/+/, '');
+    
+    // Only allow HTML files in the current directory
+    if (!normalized.match(/^[a-zA-Z0-9_-]+\.html$/)) {
+      console.warn('[Signin] Invalid next parameter format:', next);
+      return 'index.html';
+    }
+    
+    return normalized;
+  } catch (e) {
+    console.error('[Signin] Error parsing next parameter:', e);
+    return 'index.html';
+  }
+}
+
 async function handleSubmit(event) {
   event.preventDefault();
   if (formBusy) return;
@@ -111,9 +144,8 @@ async function handleSubmit(event) {
     clearStoredAuthFlowType();
     setStatus('success', 'Signed in. Redirecting...');
     
-    // Check for next parameter to redirect back to requested page
-    const urlParams = new URLSearchParams(window.location.search);
-    const nextPage = urlParams.get('next') || 'index.html';
+    // Get safe validated next page
+    const nextPage = getSafeNextPage();
     
     window.setTimeout(() => {
       window.location.assign(resolveAppUrl(nextPage));
@@ -155,9 +187,8 @@ async function init() {
     }
 
     if (user) {
-      // Check for next parameter to redirect back to requested page
-      const urlParams = new URLSearchParams(window.location.search);
-      const nextPage = urlParams.get('next') || 'index.html';
+      // Get safe validated next page
+      const nextPage = getSafeNextPage();
       
       setStatus('success', 'You are already signed in. Redirecting...');
       window.setTimeout(() => {
