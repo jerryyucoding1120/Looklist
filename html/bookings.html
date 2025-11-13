@@ -66,18 +66,32 @@
       transition: box-shadow 0.18s, border-color 0.18s, background 0.18s;
     }
     .booking-card:hover, .booking-card:focus-within { box-shadow: 0 8px 32px rgba(66,69,73,0.18); border-color: var(--silver); background: linear-gradient(135deg, #171819 0%, #232324 100%); }
-    .booking-title { font-family: var(--font-header); font-size: 1.15rem; color: var(--white); font-weight: bold; margin: 0; }
-    .booking-meta { color: var(--accent); font-size: 0.98rem; }
-    .status { font-weight: 700; }
-    .status.confirmed { color: var(--success); }
-    .status.pending { color: var(--warning); }
-    .card-actions { display: flex; gap: 0.6rem; }
+    .booking-title { font-family: var(--font-header); font-size: 1.15rem; color: var(--white); font-weight: bold; margin: 0 0 0.5rem 0; }
+    .booking-meta { color: var(--accent); font-size: 0.95rem; line-height: 1.6; }
+    .booking-status { margin-top: 0.5rem; font-size: 0.95rem; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.7rem; background: rgba(0,0,0,0.3); border-radius: 8px; }
+    .card-actions { display: flex; flex-direction: column; gap: 0.6rem; }
     .btn {
       background: var(--button-bg); color: var(--silver); border: 2px solid var(--box-border);
       padding: 0.55rem 0.9rem; border-radius: 12px; font-weight: 700; cursor: pointer; text-decoration: none;
       transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      font-family: var(--font-body); font-size: 0.95rem; text-align: center;
     }
     .btn:hover, .btn:focus { background: var(--button-hover-bg); color: var(--button-hover-text); border-color: var(--button-hover-border); box-shadow: 0 6px 24px rgba(44,46,48,0.22); outline: none; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel { border-color: #f44336; color: #f44336; }
+    .btn-cancel:hover, .btn-cancel:focus { background: rgba(244, 67, 54, 0.1); border-color: #f44336; color: #f44336; }
+    .btn-secondary { border-color: var(--accent); }
+    .refresh-btn {
+      background: var(--button-bg); color: var(--silver); border: 2px solid var(--accent);
+      padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      font-family: var(--font-body); font-size: 1rem; margin-bottom: 1rem;
+    }
+    .refresh-btn:hover, .refresh-btn:focus { background: var(--button-hover-bg); color: var(--button-hover-text); border-color: var(--button-hover-border); box-shadow: 0 6px 24px rgba(44,46,48,0.22); outline: none; }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--silver); opacity: 0.7; font-size: 1.05rem; }
+    .error-state { text-align: center; padding: 3rem 1rem; color: #f44336; font-size: 1.05rem; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
 
     footer { width: 100%; background: var(--footer-bg); color: var(--silver); text-align: center; padding: 2rem 1rem 1rem 1rem; margin-top: 3rem; letter-spacing: 0.5px; font-size: 1.05rem; border-top: 1px solid var(--box-border); box-shadow: 0 -2px 16px rgba(44,46,48,0.08); }
     .footer-nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
@@ -127,7 +141,11 @@
     <h1>Bookings</h1>
     <p class="intro">Manage your upcoming and past bookings.</p>
 
-    <div class="booking-list" role="list">
+    <button id="refresh-bookings-btn" class="refresh-btn" aria-label="Refresh bookings list">
+      🔄 Refresh
+    </button>
+
+    <div class="booking-list" role="list" aria-live="polite" aria-atomic="false">
       <!-- Filled by bookings-page.js -->
     </div>
   </main>
