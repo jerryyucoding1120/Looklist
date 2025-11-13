@@ -110,8 +110,13 @@ async function handleSubmit(event) {
     updateAuthLinks(user);
     clearStoredAuthFlowType();
     setStatus('success', 'Signed in. Redirecting...');
+    
+    // Check for next parameter to redirect back to requested page
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextPage = urlParams.get('next') || 'index.html';
+    
     window.setTimeout(() => {
-      window.location.assign(resolveAppUrl('index.html'));
+      window.location.assign(resolveAppUrl(nextPage));
     }, 600);
   } catch (error) {
     console.error('[Signin] submit error', error);
@@ -150,9 +155,13 @@ async function init() {
     }
 
     if (user) {
+      // Check for next parameter to redirect back to requested page
+      const urlParams = new URLSearchParams(window.location.search);
+      const nextPage = urlParams.get('next') || 'index.html';
+      
       setStatus('success', 'You are already signed in. Redirecting...');
       window.setTimeout(() => {
-        window.location.assign(resolveAppUrl('index.html'));
+        window.location.assign(resolveAppUrl(nextPage));
       }, 500);
       return;
     }
