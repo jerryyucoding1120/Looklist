@@ -42,6 +42,16 @@ async function init() {
   // Initial load
   await loadBookings(true);
   
+  // Handle paid=1 query parameter - perform re-fetch after payment redirect
+  // This allows webhook time to update booking status
+  const isPaid = urlParams.get('paid') === '1';
+  if (isPaid) {
+    console.log('[Bookings] Detected paid=1, scheduling refresh in 3s...');
+    setTimeout(() => {
+      loadBookings(true);
+    }, 3000);
+  }
+  
   // Start automatic polling
   startPolling();
   
@@ -115,21 +125,27 @@ function stopPolling() {
 async function fetchBookingsWithListings() {
   const client = await sp();
   
+  // Construct select query - service_name is on bookings table, not listings
+  const selectQuery = `
+    *,
+    listings (
+      id,
+      name,
+      title,
+      location,
+      area,
+      price_cents,
+      merchant_id
+    )
+  `;
+  
+  // Debug: log the select string to verify correct schema
+  console.log('[Bookings] Select query:', selectQuery);
+  
   // Fetch bookings for current user with listing details joined
   const { data, error } = await client
     .from('bookings')
-    .select(`
-      *,
-      listing:listings (
-        id,
-        title,
-        service_name,
-        location,
-        area,
-        price_cents,
-        merchant_id
-      )
-    `)
+    .select(selectQuery)
     .eq('customer_id', currentUserId)
     .order('created_at', { ascending: false });
   
@@ -289,8 +305,9 @@ function getStatusBadge(status) {
  * Create booking card element
  */
 function createBookingCard(booking) {
-  const listing = booking.listing || {};
-  const title = listing.service_name || listing.title || 'Service';
+  // Safe fallback when listing join is missing
+  const listing = booking.listings || {};
+  const title = listing.name || listing.title || booking.service_name || 'Listing';
   const location = listing.location || listing.area || 'Location not specified';
   const status = booking.status || 'pending';
   const startTime = booking.start_time || booking.scheduled_at || booking.created_at;

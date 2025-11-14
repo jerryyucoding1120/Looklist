@@ -116,8 +116,8 @@ Deno.serve(async (req) => {
 
     // Dynamically determine the redirect URL from request headers
     const siteUrl = req.headers.get('origin') || new URL(req.url).origin;
-    const successUrl = 'https://looklist.co.uk/html/profile.html?paid=1';
-    const cancelUrl = new URL(`/Looklist/html/index.html?stripe=cancel`, siteUrl).toString();
+    const successUrl = 'https://looklist.co.uk/bookings.html?paid=1&session_id={CHECKOUT_SESSION_ID}';
+    const cancelUrl = 'https://looklist.co.uk/index.html?stripe=cancel';
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
