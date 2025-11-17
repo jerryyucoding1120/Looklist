@@ -132,8 +132,10 @@ async function fetchBookingsWithListings() {
       id,
       name,
       title,
-      location,
-      area,
+      city,
+      postcode,
+      lat,
+      lng,
       price_cents,
       merchant_id
     )
@@ -308,7 +310,7 @@ function createBookingCard(booking) {
   // Safe fallback when listing join is missing
   const listing = booking.listings || {};
   const title = listing.name || listing.title || booking.service_name || 'Listing';
-  const location = listing.location || listing.area || 'Location not specified';
+  const location = listing.city || listing.postcode || 'Location not specified';
   const status = booking.status || 'pending';
   const startTime = booking.start_time || booking.scheduled_at || booking.created_at;
   const duration = booking.duration_minutes || 60;
