@@ -2,6 +2,7 @@ import { sb, __SUPABASE_URL } from '../supabase-client.js';
 import { requireUser, signOut } from './auth.js';
 import { LISTING_IMAGES_BUCKET, listListingImages, uploadListingImages, deleteListingImage } from './storage.js';
 import { initializeSlotEditor } from '../slot-editor.js';
+import { subscribeMerchantDashboard, cleanupAllSubscriptions, monitorConnection } from '../../../realtime.js';
 
 const form = document.getElementById('listing-form');
 const list = document.getElementById('my-listings');
@@ -11,6 +12,8 @@ const formTitle = document.getElementById('form-title');
 const submitBtn = document.getElementById('submit-btn');
 
 let currentUser = null;
+let realtimeUnsubscribe = null;
+let connectionMonitor = null;
 
 // Log resolved configuration for debugging on initialization
 if (!window.__looklist_listingsConfigLogged) {
@@ -24,6 +27,131 @@ if (!window.__looklist_listingsConfigLogged) {
  * Ensure a profile row exists for the user.
  * Upserts into profiles table to prevent FK constraint violations.
  */
+/**
+ * Phase 3 Dev C - Setup Realtime Subscriptions
+ * Subscribes to listing and availability changes for the merchant dashboard
+ */
+async function setupRealtimeDashboard(merchantId) {
+  console.log('[Realtime] Setting up subscriptions for merchant:', merchantId);
+  
+  // Subscribe to realtime updates
+  realtimeUnsubscribe = subscribeMerchantDashboard(merchantId, {
+    onListingChange: (eventType, newListing, oldListing) => {
+      console.log(`[Realtime] Listing ${eventType}:`, newListing);
+      handleRealtimeListingChange(eventType, newListing, oldListing);
+    },
+    onAvailabilityChange: (eventType, newAvailability, oldAvailability) => {
+      console.log(`[Realtime] Availability ${eventType}:`, newAvailability);
+      showRealtimeToast(`Availability ${eventType.toLowerCase()}d: ${newAvailability?.label || 'slot'}`);
+    },
+    onError: (err) => {
+      console.error('[Realtime] Error:', err);
+      showRealtimeToast('Connection issue. Refreshing...', 'warning');
+      // Refetch listings on error
+      if (currentUser) {
+        ensureProfileExists(currentUser).then(() => {
+          // Reload listings - this will call your existing load function
+          window.location.reload();
+        });
+      }
+    }
+  });
+
+  // Monitor connection state and refetch on reconnect
+  connectionMonitor = monitorConnection(() => {
+    console.log('[Realtime] Connection re-established, refetching data...');
+    showRealtimeToast('Reconnected. Refreshing data...');
+    if (currentUser) {
+      window.location.reload(); // Simple approach: reload page
+    }
+  });
+
+  console.log('[Realtime] ✅ Subscriptions active');
+}
+
+/**
+ * Handle realtime listing changes
+ */
+function handleRealtimeListingChange(eventType, newListing, oldListing) {
+  if (eventType === 'INSERT') {
+    showRealtimeToast(`✨ New listing created: ${newListing.name}`, 'success');
+    // Reload page to show new listing
+    setTimeout(() => window.location.reload(), 1500);
+    
+  } else if (eventType === 'UPDATE') {
+    const statusChanged = oldListing?.is_active !== newListing?.is_active;
+    const message = statusChanged 
+      ? `📝 Listing "${newListing.name}" is now ${newListing.is_active ? 'published' : 'draft'}`
+      : `📝 Listing "${newListing.name}" updated`;
+    showRealtimeToast(message, 'info');
+    // Reload to show changes
+    setTimeout(() => window.location.reload(), 1500);
+    
+  } else if (eventType === 'DELETE') {
+    showRealtimeToast(`🗑️ Listing deleted`, 'info');
+    setTimeout(() => window.location.reload(), 1500);
+  }
+}
+
+/**
+ * Show realtime toast notification
+ */
+function showRealtimeToast(message, type = 'info') {
+  console.log(`[Toast] ${message}`);
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = 'realtime-toast';
+  
+  const colors = {
+    success: '#66bb6a',
+    info: '#90caf9',
+    warning: '#ffb74d',
+    error: '#ef5350'
+  };
+  
+  const color = colors[type] || colors.info;
+  
+  toast.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: #23272a;
+    color: ${color};
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 2px solid ${color};
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    z-index: 10000;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    max-width: 350px;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  // Add animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 3.5 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(400px)';
+    toast.style.transition = 'all 0.3s ease-in';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 async function ensureProfileExists(sb, user) {
   if (!user?.id) return;
 
@@ -49,7 +177,11 @@ main();
 
 async function main() {
   currentUser = await requireUser(); if (!currentUser) return;
-  if (signoutBtn) signoutBtn.onclick = signOut;
+  if (signoutBtn) signoutBtn.onclick = async () => {
+  if (realtimeCleanup) realtimeCleanup();
+  await signOut();
+};
+
 
   // Update header Sign in link to Sign Out
   const signInLinks = document.querySelectorAll('[data-auth="signin"]');
@@ -118,6 +250,12 @@ async function main() {
       }
       await refreshMyListings(currentUser.id);
     });
+    window.addEventListener('beforeunload', () => {
+    if (realtimeCleanup) {
+      console.log('[listings] Cleaning up realtime subscriptions');
+      realtimeCleanup();
+    }
+  });
   }
 
   if (cancelEditBtn) {
