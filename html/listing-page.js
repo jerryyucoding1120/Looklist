@@ -1,5 +1,4 @@
 // Use unified Supabase client to ensure consistent auth state across all pages
-// This prevents session conflicts and ensures Authorization headers are properly attached
 import { sb } from './supabase-client.js';
 import { getAuthClients } from './auth.js';
 
@@ -13,11 +12,35 @@ const infoEl = document.getElementById('listingInfo');
 const photoGalleryEl = document.getElementById('photoGallery');
 const slotsEl = document.getElementById('slots');
 const bookButton = document.getElementById('bookBtn');
+const messageButton = document.getElementById('messageBtn');
 const lldInput = document.getElementById('lld');
 const lldValue = document.getElementById('lldValue');
 
 const clientsPromise = getAuthClients();
-let selectedSlotId = null;
+let selectedSlot = null;
+let userIsAuthenticated = false;
+let currentUserId = null;
+
+// Listen for auth changes
+sb.auth.onAuthStateChange((event, session) => {
+  userIsAuthenticated = !!session;
+  currentUserId = session?.user?.id || null;
+  updateBookButtonState();
+});
+
+// Initial auth check
+clientsPromise.then(async ({ user }) => {
+  if (!user) {
+    const { data } = await sb.auth.getSession();
+    userIsAuthenticated = !!data.session;
+    currentUserId = data.session?.user?.id || null;
+  } else {
+    userIsAuthenticated = true;
+    currentUserId = user.id;
+  }
+  updateBookButtonState();
+});
+
 let galleryPhotos = [];
 let currentPhotoIndex = 0;
 
@@ -60,82 +83,56 @@ function renderListing(listing) {
 }
 
 async function renderPhotoGallery(listingId) {
-  // Always initialize/reset gallery state at the start
   galleryPhotos = [];
-  
-  if (!photoGalleryEl) {
-    return;
-  }
-  
+  if (!photoGalleryEl) return;
+
   photoGalleryEl.innerHTML = '<div class="photo-gallery-loading">Loading photos...</div>';
-  
+
   try {
-    // Fetch photos using unified client
     const { data, error } = await sb.storage
       .from(LISTING_IMAGES_BUCKET)
-      .list(listingId, { 
-        limit: 100, 
-        offset: 0, 
-        sortBy: { column: 'created_at', order: 'asc' } 
+      .list(listingId, {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: 'created_at', order: 'asc' }
       });
-    
-    if (error) {
-      console.error('[Listing] Error listing photos for listing:', listingId, 'Error:', error);
-      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">Unable to load photos.</div>';
+
+    if (error || !data || data.length === 0) {
+      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">No photos available.</div>';
       return;
     }
-    
-    // Filter image files and generate public URLs
-    const photos = (data || [])
+
+    const photos = data
       .filter(f => f.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name))
       .map((f) => {
         const path = `${listingId}/${f.name}`;
         const { data: urlData } = sb.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(path);
-        return {
-          name: f.name,
-          path,
-          url: urlData.publicUrl,
-          created_at: f.created_at
-        };
+        return { name: f.name, path, url: urlData.publicUrl };
       });
-    
+
     galleryPhotos = photos;
-    
-    if (!photos || photos.length === 0) {
-      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">No photos available for this listing.</div>';
+
+    if (photos.length === 0) {
+      photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">No photos available.</div>';
       return;
     }
-    
+
     const galleryHTML = `
       <h2 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Photos</h2>
       <div class="photo-gallery-grid" role="list">
         ${photos.map((photo, index) => `
           <div class="photo-gallery-item" role="listitem" data-photo-index="${index}">
-            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1} of ${photos.length}" loading="lazy">
-            <button type="button" aria-label="View photo ${index + 1} of ${photos.length} in full screen"></button>
+            <img src="${escapeHTML(photo.url)}" alt="Listing photo ${index + 1}" loading="lazy">
+            <button type="button" aria-label="View photo"></button>
           </div>
         `).join('')}
       </div>
     `;
-    
+
     photoGalleryEl.innerHTML = galleryHTML;
-    
-    // Add click handlers for lightbox with better error handling
+
     photoGalleryEl.querySelectorAll('.photo-gallery-item').forEach((item) => {
       const button = item.querySelector('button');
-      const img = item.querySelector('img');
-      
-      // Handle image load errors
-      img.addEventListener('error', () => {
-        item.classList.add('photo-gallery-error');
-        console.error('[Listing] Failed to load image:', img.src);
-      });
-      
-      // Handle successful image load
-      img.addEventListener('load', () => {
-        item.classList.remove('photo-gallery-error');
-      });
-      
       if (button) {
         button.addEventListener('click', () => {
           const index = parseInt(item.getAttribute('data-photo-index'), 10);
@@ -144,39 +141,23 @@ async function renderPhotoGallery(listingId) {
       }
     });
   } catch (error) {
-    console.error('[Listing] Error loading photos:', error);
+    console.error('Error loading photos:', error);
     photoGalleryEl.innerHTML = '<div class="photo-gallery-empty">Unable to load photos.</div>';
-    galleryPhotos = []; // Reset on error
   }
 }
 
 function openLightbox(index) {
   if (!galleryPhotos || galleryPhotos.length === 0) return;
-  
   currentPhotoIndex = index;
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
   const lightboxCounter = lightbox?.querySelector('.lightbox-counter');
-  
+
   if (lightbox && lightboxImg) {
     lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
-    lightboxImg.alt = `Listing photo ${currentPhotoIndex + 1} of ${galleryPhotos.length}`;
-    
-    // Update counter
-    if (lightboxCounter) {
-      lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
-    }
-    
+    if (lightboxCounter) lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
-    
-    // Focus the close button for accessibility after a brief delay to ensure the lightbox is visible
-    const closeBtn = lightbox.querySelector('.lightbox-close');
-    if (closeBtn) {
-      requestAnimationFrame(() => {
-        closeBtn.focus();
-      });
-    }
   }
 }
 
@@ -189,77 +170,31 @@ function closeLightbox() {
 }
 
 function navigateLightbox(direction) {
-  if (!galleryPhotos || galleryPhotos.length === 0) return;
-  
+  if (!galleryPhotos.length) return;
   currentPhotoIndex += direction;
-  
-  if (currentPhotoIndex < 0) {
-    currentPhotoIndex = galleryPhotos.length - 1;
-  } else if (currentPhotoIndex >= galleryPhotos.length) {
-    currentPhotoIndex = 0;
-  }
-  
+  if (currentPhotoIndex < 0) currentPhotoIndex = galleryPhotos.length - 1;
+  else if (currentPhotoIndex >= galleryPhotos.length) currentPhotoIndex = 0;
+
   const lightboxImg = document.getElementById('lightbox-img');
-  const lightbox = document.getElementById('lightbox');
-  const lightboxCounter = lightbox?.querySelector('.lightbox-counter');
-  
-  if (lightboxImg) {
-    lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
-    lightboxImg.alt = `Listing photo ${currentPhotoIndex + 1} of ${galleryPhotos.length}`;
-  }
-  
-  // Update counter
-  if (lightboxCounter) {
-    lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
-  }
+  const lightboxCounter = document.querySelector('.lightbox-counter');
+  if (lightboxImg) lightboxImg.src = galleryPhotos[currentPhotoIndex].url;
+  if (lightboxCounter) lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
 }
 
 function setupLightbox() {
   const lightbox = document.getElementById('lightbox');
-  const closeBtn = lightbox?.querySelector('.lightbox-close');
-  const prevBtn = lightbox?.querySelector('.lightbox-prev');
-  const nextBtn = lightbox?.querySelector('.lightbox-next');
-  
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeLightbox);
-  }
-  
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => navigateLightbox(-1));
-  }
-  
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => navigateLightbox(1));
-  }
-  
-  // Close on background click
   if (lightbox) {
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) {
-        closeLightbox();
-      }
-    });
+    lightbox.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
+    lightbox.querySelector('.lightbox-prev')?.addEventListener('click', () => navigateLightbox(-1));
+    lightbox.querySelector('.lightbox-next')?.addEventListener('click', () => navigateLightbox(1));
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
   }
-  
-  // Keyboard navigation handler
-  const handleKeydown = (e) => {
-    const lightboxActive = lightbox?.classList.contains('active');
-    if (!lightboxActive) return;
-    
-    if (e.key === 'Escape') {
-      closeLightbox();
-    } else if (e.key === 'ArrowLeft') {
-      navigateLightbox(-1);
-    } else if (e.key === 'ArrowRight') {
-      navigateLightbox(1);
-    }
-  };
-  
-  // Add keyboard listener only once by checking for existing marker
-  if (!document.body.hasAttribute('data-lightbox-keyboard-listener')) {
-    document.addEventListener('keydown', handleKeydown);
-    document.body.setAttribute('data-lightbox-keyboard-listener', 'true');
-  }
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox?.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+  });
 }
 
 function renderSlots(slots) {
@@ -268,85 +203,163 @@ function renderSlots(slots) {
     slotsEl.textContent = 'No available times yet.';
     return;
   }
-  slotsEl.innerHTML = slots
-    .map((slot) => {
-      const label = slot.label ? ` - ${escapeHTML(slot.label)}` : '';
-      const price = formatMoney(slot.price);
-      return `<label class="slot">
-        <input type="radio" name="slot" value="${slot.id}" data-price="${slot.price}">
-        ${slot.date} ${slot.start_time} - ${slot.end_time} - ${price}${label}
-      </label>`;
-    })
-    .join('');
-  slotsEl.addEventListener('change', (event) => {
-    if (!(event.target instanceof HTMLInputElement)) return;
-    selectedSlotId = event.target.value;
-    if (bookButton) bookButton.disabled = !selectedSlotId;
+
+  slotsEl.innerHTML = '';
+  slots.forEach((slot) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot-picker-btn';
+    const label = slot.label ? ` - ${escapeHTML(slot.label)}` : '';
+
+    btn.innerHTML = `
+      <span class="slot-time">${slot.date} | ${slot.start_time}</span>
+      <span class="slot-price">${formatMoney(slot.price)}${label}</span>
+    `;
+
+    btn.onclick = () => {
+      document.querySelectorAll('.slot-picker-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedSlot = slot;
+      
+      // Reset LLD when slot changes
+      if (lldInput) {
+        lldInput.value = 0;
+        lldValue.textContent = formatMoney(0);
+      }
+      updateBookButtonState();
+    };
+    slotsEl.appendChild(btn);
   });
+
+  const params = new URLSearchParams(window.location.search);
+  const savedSlotId = params.get('slotId');
+  if (savedSlotId) {
+    const index = slots.findIndex(s => String(s.id) === String(savedSlotId));
+    if (index !== -1) setTimeout(() => slotsEl.children[index].click(), 100);
+  }
 }
 
 function setupLldField() {
   if (!lldInput || !lldValue) return;
-  const update = () => {
-    const redeemed = Math.max(0, parseInt(lldInput.value || '0', 10));
-    lldValue.textContent = formatMoney(redeemed * 0.01);
-  };
-  lldInput.addEventListener('input', update);
-  update();
+  lldInput.addEventListener('input', () => {
+    let val = parseInt(lldInput.value, 10) || 0;
+    const maxPriceInPence = selectedSlot ? Math.floor(selectedSlot.price * 100) : 0;
+    if (val > maxPriceInPence) {
+      val = maxPriceInPence;
+      lldInput.value = val;
+    }
+    lldValue.textContent = formatMoney(val * 0.01);
+  });
 }
 
-async function getAuthToken() {
-  const { spLocal, spSession } = await clientsPromise;
-  const [local, session] = await Promise.all([
-    spLocal.auth.getSession(),
-    spSession.auth.getSession(),
-  ]);
-  return local.data.session?.access_token || session.data.session?.access_token || null;
+function updateBookButtonState() {
+  if (!bookButton) return;
+  if (!userIsAuthenticated) {
+    bookButton.disabled = false;
+    bookButton.textContent = 'Sign in to Book';
+    bookButton.classList.add('auth-needed');
+  } else if (!selectedSlot) {
+    bookButton.disabled = true;
+    bookButton.textContent = 'Select a Slot';
+    bookButton.classList.remove('auth-needed');
+  } else {
+    bookButton.disabled = false;
+    bookButton.textContent = 'Book Now';
+    bookButton.classList.remove('auth-needed');
+  }
 }
 
 async function handleBooking(listing) {
-  if (!selectedSlotId) return;
-  const token = await getAuthToken();
-  if (!token) {
-    alert('Please sign in first.');
-    window.location.href = `signin.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  if (!userIsAuthenticated) {
+    const params = new URLSearchParams();
+    params.set('next', 'listing.html');
+    params.set('id', listingId);
+    if (selectedSlot) params.set('slotId', selectedSlot.id);
+    params.set('msg', 'Please sign in to complete your booking.');
+    window.location.href = `signin.html?${params.toString()}`;
     return;
   }
 
-  const slotInput = document.querySelector('input[name="slot"]:checked');
-  const slotPrice = Number(slotInput?.dataset?.price || 0);
+  // Show loading state
+  const originalText = bookButton.textContent;
+  bookButton.disabled = true;
+  bookButton.textContent = 'Connecting to Stripe...';
+
+  // FIX: Check selectedSlot object, NOT undefined "selectedSlotId"
+  if (!selectedSlot) {
+    alert("Please select a time slot.");
+    bookButton.disabled = false;
+    bookButton.textContent = originalText;
+    return;
+  }
+
+  // FIX: Get price directly from selectedSlot object
+  const slotPrice = Number(selectedSlot.price || 0);
   const lldSelected = Math.max(0, parseInt(lldInput?.value || '0', 10));
   const maxRedeemable = Math.min(lldSelected, Math.floor(slotPrice * 100));
 
   try {
-    // Use unified client to invoke Edge Function - ensures Authorization header is attached
     const { data, error } = await sb.functions.invoke('create-checkout-session', {
       body: {
         listing_id: listing.id,
-        availability_id: selectedSlotId,
+        availability_id: selectedSlot.id, // FIX: Use correct ID
         lld_to_redeem: maxRedeemable,
       },
     });
-    
-    // Handle function invocation errors
+
     if (error) throw new Error(error.message || 'Failed to start checkout.');
-    
-    // Handle response envelope with { success, data?, error? }
-    if (!data?.success) {
-      throw new Error(data?.error || 'Failed to start checkout.');
-    }
-    
+    if (!data?.success) throw new Error(data?.error || 'Failed to start checkout.');
     if (!data?.data?.url) throw new Error('No checkout URL returned.');
+
+    // Redirect to Stripe
     window.location.href = data.data.url;
+
   } catch (error) {
+    console.error("Booking Error:", error);
+    bookButton.disabled = false;
+    bookButton.textContent = originalText;
     alert(error?.message || 'Unable to start checkout.');
+  }
+}
+
+async function handleMessageMerchant(listing) {
+  if (!messageButton) return;
+  if (!userIsAuthenticated) {
+    const params = new URLSearchParams();
+    params.set('next', 'listing.html');
+    params.set('id', listingId);
+    params.set('msg', 'Please sign in to message the merchant.');
+    window.location.href = `signin.html?${params.toString()}`;
+    return;
+  }
+
+  const originalText = messageButton.textContent;
+  messageButton.disabled = true;
+  messageButton.textContent = 'Opening chat...';
+
+  try {
+    if (!listing || !listing.merchant_id) throw new Error('Merchant info missing');
+
+    const { data, error } = await sb.functions.invoke('find-or-create-thread', {
+      body: { merchant_id: listing.merchant_id, listing_id: listingId }
+    });
+
+    if (error || !data?.ok || !data?.thread_id) {
+        throw new Error(error?.message || data?.error || 'Failed to start chat');
+    }
+
+    window.location.href = `message-thread.html?id=${data.thread_id}`;
+  } catch (error) {
+    console.error('Message error:', error);
+    alert(error.message);
+    messageButton.disabled = false;
+    messageButton.textContent = originalText;
   }
 }
 
 async function loadData() {
   if (!listingId) {
     if (infoEl) infoEl.textContent = 'Listing ID missing.';
-    if (bookButton) bookButton.disabled = true;
     return;
   }
 
@@ -355,23 +368,16 @@ async function loadData() {
 
   const [listingResult, availabilityResult] = await Promise.all([
     sb.from('listings').select('*').eq('id', listingId).single(),
-    sb
-      .from('availability')
-      .select('*')
-      .eq('listing_id', listingId)
-      .gte('date', today)
-      .lte('date', in14)
-      .order('date'),
+    sb.from('availability').select('*').eq('listing_id', listingId).gte('date', today).lte('date', in14).order('date'),
   ]);
 
   if (listingResult.error) {
     if (infoEl) infoEl.textContent = listingResult.error.message;
     return;
   }
+
   const listing = listingResult.data;
   renderListing(listing);
-  
-  // Load photos for the listing
   await renderPhotoGallery(listingId);
 
   if (availabilityResult.error) {
@@ -382,7 +388,13 @@ async function loadData() {
 
   if (bookButton) {
     bookButton.addEventListener('click', () => handleBooking(listing));
-    bookButton.disabled = true;
+    updateBookButtonState();
+  }
+
+  if (messageButton) {
+    const isOwnListing = currentUserId && listing.merchant_id && currentUserId === listing.merchant_id;
+    if (isOwnListing) messageButton.style.display = 'none';
+    else messageButton.addEventListener('click', () => handleMessageMerchant(listing));
   }
 }
 
@@ -392,7 +404,4 @@ async function init() {
   await loadData();
 }
 
-init().catch((error) => {
-  console.error('[Listing] init', error);
-  if (infoEl) infoEl.textContent = error?.message || 'Failed to load listing.';
-});
+init().catch((error) => console.error('[Listing] init error', error));

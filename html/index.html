@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Looklist Development BETA Preview</title>
-<meta content="Looklist — discover, book, and pay for luxury beauty services with trusted local merchants." name="description"/>
-<link href="assets/logo1.png" rel="icon" sizes="any" type="image/png"/>
-<link href="assets/logo1.png" rel="apple-touch-icon"/>
-<link href="assets/logo1.png" rel="shortcut icon"/>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/background.css" rel="stylesheet"/>
-<style>:root {
+  <meta charset="utf-8" />
+  <meta content="width=device-width,initial-scale=1" name="viewport" />
+  <title>Looklist Development BETA Preview</title>
+  <meta content="Looklist — discover, book, and pay for luxury beauty services with trusted local merchants."
+    name="description" />
+  <link href="assets/logo1.png" rel="icon" sizes="any" type="image/png" />
+  <link href="assets/logo1.png" rel="apple-touch-icon" />
+  <link href="assets/logo1.png" rel="shortcut icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Inter:wght@400;500&amp;display=swap"
+    rel="stylesheet" />
+  <link href="assets/css/background.css" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
       --background: linear-gradient(135deg, #131415 0%, #09090a 100%);
       --silver: #cfd8dc;
       --grey: #424549;
@@ -33,7 +39,9 @@
       --button-hover-text: #cfd8dc;
       --white: #fff;
     }
-    html, body {
+
+    html,
+    body {
       background: var(--background);
       color: var(--text);
       font-family: var(--font-body);
@@ -43,13 +51,18 @@
       font-size: 18px;
       -webkit-font-smoothing: antialiased;
     }
-    h1, h2, h3, h4 {
+
+    h1,
+    h2,
+    h3,
+    h4 {
       font-family: var(--font-header);
       font-weight: bold;
       margin: 0 0 0.5em 0;
       letter-spacing: 1px;
       color: var(--silver);
     }
+
     .header-bar {
       width: 100%;
       display: flex;
@@ -62,6 +75,7 @@
       margin-bottom: 1.2rem;
       border-bottom: 1.5px solid var(--box-border);
     }
+
     .logo-img {
       height: 42px;
       width: auto;
@@ -72,6 +86,7 @@
       box-shadow: none;
       border: 2px solid var(--box-border);
     }
+
     .main-logo-img {
       display: block;
       margin: 0 auto 1.2rem auto;
@@ -80,8 +95,9 @@
       border-radius: 16px;
       border: 2px solid var(--box-border);
       background: transparent;
-      box-shadow: 0 4px 24px rgba(44,46,48,0.10);
+      box-shadow: 0 4px 24px rgba(44, 46, 48, 0.10);
     }
+
     .header-title {
       font-family: var(--font-header);
       font-size: 1.9rem;
@@ -89,7 +105,7 @@
       color: var(--silver);
       margin-right: auto;
       letter-spacing: 1.5px;
-      text-shadow: 0 2px 8px rgba(207,216,220,0.18);
+      text-shadow: 0 2px 8px rgba(207, 216, 220, 0.18);
       background: none;
       border: none;
       padding: 0;
@@ -97,6 +113,7 @@
       align-items: center;
       gap: 0.4rem;
     }
+
     .home-link {
       color: var(--silver);
       font-family: var(--font-header);
@@ -114,19 +131,36 @@
       outline: none;
       display: inline-block;
     }
-    .home-link:hover, .home-link:focus {
+
+    .home-link:hover,
+    .home-link:focus {
       color: var(--button-hover-text);
       background: var(--button-hover-bg);
       border-color: var(--button-hover-border);
       text-decoration: none;
     }
-    .show-mobile { display: none; }
-    .hide-mobile { display: inline-block; }
+
+    .show-mobile {
+      display: none;
+    }
+
+    .hide-mobile {
+      display: inline-block;
+    }
+
     @media (max-width: 600px) {
-      .show-mobile { display: inline-block; }
-      .hide-mobile { display: none; }
+      .show-mobile {
+        display: inline-block;
+      }
+
+      .hide-mobile {
+        display: none;
+      }
+
       /* Only hide header buttons (not the header itself) on mobile */
-      .header-bar .home-link { display: none !important; }
+      .header-bar .home-link {
+        display: none !important;
+      }
     }
 
     .hero {
@@ -138,12 +172,23 @@
       text-align: center;
       background: transparent;
     }
-    .white-accent { color: var(--white) !important; font-weight: bold; text-shadow: 0 2px 8px rgba(255,255,255,0.18); }
-    .silver-accent { color: var(--silver); font-weight: bold; text-shadow: 0 2px 8px rgba(207,216,220,0.15); }
+
+    .white-accent {
+      color: var(--white) !important;
+      font-weight: bold;
+      text-shadow: 0 2px 8px rgba(255, 255, 255, 0.18);
+    }
+
+    .silver-accent {
+      color: var(--silver);
+      font-weight: bold;
+      text-shadow: 0 2px 8px rgba(207, 216, 220, 0.15);
+    }
+
     .hero-box {
       background: var(--box-bg);
       border-radius: 24px;
-      box-shadow: 0 4px 32px rgba(44,46,48,0.15), 0 1.5px 8px rgba(0,0,0,0.09);
+      box-shadow: 0 4px 32px rgba(44, 46, 48, 0.15), 0 1.5px 8px rgba(0, 0, 0, 0.09);
       padding: 2.5rem 2rem;
       max-width: 900px;
       margin: 2rem 0;
@@ -153,7 +198,13 @@
       border: 2px solid var(--box-border);
       position: relative;
     }
-    .hero-title { font-size: 3rem; margin-bottom: 1.5rem; color: var(--silver); }
+
+    .hero-title {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      color: var(--silver);
+    }
+
     .hero-desc {
       font-size: 1.3rem;
       font-weight: 500;
@@ -162,6 +213,7 @@
       line-height: 1.5;
       color: var(--accent);
     }
+
     .platform-desc {
       background: transparent;
       font-size: 1.12rem;
@@ -171,6 +223,7 @@
       text-align: center;
       line-height: 1.6;
     }
+
     .hero-rating {
       display: block;
       margin-top: 0.75rem;
@@ -180,7 +233,7 @@
       border-radius: 14px;
       border: 1px solid var(--box-border);
       background: var(--button-bg);
-      box-shadow: 0 2px 14px rgba(44,46,48,0.15);
+      box-shadow: 0 2px 14px rgba(44, 46, 48, 0.15);
     }
 
     .cta-btn {
@@ -193,14 +246,16 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 1rem;
-      box-shadow: 0 4px 24px rgba(44,46,48,0.16);
+      box-shadow: 0 4px 24px rgba(44, 46, 48, 0.16);
       transition: background 0.2s, box-shadow 0.2s, color 0.2s, border-color 0.2s;
       text-decoration: none;
       display: inline-block;
     }
-    .cta-btn:hover, .cta-btn:focus {
+
+    .cta-btn:hover,
+    .cta-btn:focus {
       background: var(--button-hover-bg);
-      box-shadow: 0 8px 32px rgba(44,46,48,0.28);
+      box-shadow: 0 8px 32px rgba(44, 46, 48, 0.28);
       outline: 2px solid var(--button-hover-border);
       color: var(--button-hover-text);
       border-color: var(--button-hover-border);
@@ -219,7 +274,7 @@
       background: var(--service-bg);
       border-radius: 22px;
       border: 2px solid var(--box-border);
-      box-shadow: 0 2px 18px rgba(18,18,20,0.22);
+      box-shadow: 0 2px 18px rgba(18, 18, 20, 0.22);
       padding: 1.25rem 1.2rem;
       max-width: 900px;
       width: calc(100% - 2rem);
@@ -231,13 +286,18 @@
       justify-content: space-between;
       gap: 1.25rem;
     }
+
     .info-text {
       font-size: 1.06rem;
       line-height: 1.6;
       text-align: left;
       flex: 1 1 0;
     }
-    .info-text .cta-btn { margin-top: 0.8rem; }
+
+    .info-text .cta-btn {
+      margin-top: 0.8rem;
+    }
+
     .info-media {
       flex: 0 0 auto;
       width: 380px;
@@ -249,42 +309,104 @@
       object-fit: contain;
     }
 
-    .mobile-bottom-nav { display: none; }
+    .mobile-bottom-nav {
+      display: none;
+    }
 
     @media (max-width: 600px) {
-      .service-row { gap: 0.7rem; }
-      .main-logo-img { height: 128px; margin-bottom: 0.7rem; }
-      .header-title { font-size: 1.3rem; }
-      .hero-title { font-size: 2.1rem; }
-      .hero-desc { font-size: 1.05rem; }
-      .hero-box { padding: 1.1rem; }
-      .footer-nav { gap: 1rem; }
+      .service-row {
+        gap: 0.7rem;
+      }
 
-      .info-box { flex-direction: column; text-align: center; }
-      .info-text { text-align: center; }
-      .info-media { width: 100%; max-width: 380px; }
+      .main-logo-img {
+        height: 128px;
+        margin-bottom: 0.7rem;
+      }
 
-      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-      footer { padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom)); }
+      .header-title {
+        font-size: 1.3rem;
+      }
+
+      .hero-title {
+        font-size: 2.1rem;
+      }
+
+      .hero-desc {
+        font-size: 1.05rem;
+      }
+
+      .hero-box {
+        padding: 1.1rem;
+      }
+
+      .footer-nav {
+        gap: 1rem;
+      }
+
+      .info-box {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .info-text {
+        text-align: center;
+      }
+
+      .info-media {
+        width: 100%;
+        max-width: 380px;
+      }
+
+      body {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom));
+      }
+
+      footer {
+        padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom));
+      }
 
       .mobile-bottom-nav {
-        position: fixed; left: 0; right: 0; bottom: 0; height: 64px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 64px;
         padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) 8px;
-        background: var(--footer-bg); border-top: 1px solid var(--box-border);
-        display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+        background: var(--footer-bg);
+        border-top: 1px solid var(--box-border);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
       }
+
       .mobile-bottom-nav .nav-item {
-        display: flex; flex-direction: column; align-items: center;
-        gap: 0.25rem; text-decoration: none; color: var(--silver);
-        font-size: 0.72rem; padding: 0.25rem 0.5rem; min-width: 64px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        text-decoration: none;
+        color: var(--silver);
+        font-size: 0.72rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 64px;
       }
+
       .mobile-bottom-nav .nav-item:focus,
-      .mobile-bottom-nav .nav-item:hover { color: var(--white); }
+      .mobile-bottom-nav .nav-item:hover {
+        color: var(--white);
+      }
+
       .mobile-bottom-nav .nav-icon {
-        width: 42px; height: 42px; object-fit: contain; border-radius: 6px;
-        border: 1px solid var(--box-border); background: var(--button-bg);
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        border-radius: 6px;
+        border: 1px solid var(--box-border);
+        background: var(--button-bg);
       }
     }
+
     footer {
       width: 100%;
       background: var(--footer-bg);
@@ -295,8 +417,9 @@
       letter-spacing: 0.5px;
       font-size: 1.05rem;
       border-top: 1px solid var(--box-border);
-      box-shadow: 0 -2px 16px rgba(44,46,48,0.08);
+      box-shadow: 0 -2px 16px rgba(44, 46, 48, 0.08);
     }
+
     .footer-nav {
       display: flex;
       justify-content: center;
@@ -304,6 +427,7 @@
       margin-bottom: 1rem;
       flex-wrap: wrap;
     }
+
     .footer-btn {
       background: none;
       border: 2px solid transparent;
@@ -317,199 +441,448 @@
       transition: background 0.18s, color 0.18s, border-color 0.18s;
       text-decoration: underline;
     }
-    .footer-btn:hover, .footer-btn:focus {
+
+    .footer-btn:hover,
+    .footer-btn:focus {
       background: var(--button-hover-bg);
       color: var(--button-hover-text);
       border-color: var(--button-hover-border);
       outline: none;
       text-decoration: none;
     }
+
     a {
       color: var(--silver);
       text-decoration: underline;
       transition: color 0.2s;
     }
-    a:hover, a:focus {
+
+    a:hover,
+    a:focus {
       color: var(--accent);
       text-decoration: underline;
     }
 
-    .header-bar .nav-desktop { display: none; }
+    .header-bar .nav-desktop {
+      display: none;
+    }
+
     @media (min-width: 1024px) {
-      .header-bar .nav-desktop { display: inline-block; }
+      .header-bar .nav-desktop {
+        display: inline-block;
+      }
     }
-  
-/* Top 5 featured grid (non-invasive) */
-.card-grid.five{display:grid;gap:14px;grid-template-columns:repeat(5, minmax(0,1fr));}
-@media (max-width: 1100px){.card-grid.five{grid-template-columns:repeat(3, minmax(0,1fr));}}
-@media (max-width: 700px){.card-grid.five{grid-template-columns:repeat(2, minmax(0,1fr));}}
-@media (max-width: 460px){.card-grid.five{grid-template-columns:1fr;}}
-.section-title{margin:0 0 10px 0;font-size:1.1rem;opacity:.9}
-.featured-row{margin-top:22px}
+
+    /* Top 5 featured grid (non-invasive) */
+    .card-grid.five {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1100px) {
+      .card-grid.five {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .card-grid.five {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 460px) {
+      .card-grid.five {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section-title {
+      margin: 0 0 10px 0;
+      font-size: 1.1rem;
+      opacity: .9
+    }
+
+    .featured-row {
+      margin-top: 22px
+    }
 
 
-/* Top 5 as panel */
-.featured-panel{margin-top:26px}
-.featured-panel .section-title{margin:0 0 12px 0;font-size:1.05rem;opacity:.95}
-.card-grid.five{display:grid;gap:14px;grid-template-columns:repeat(5, minmax(0,1fr));}
-@media (max-width: 1100px){.card-grid.five{grid-template-columns:repeat(3, minmax(0,1fr));}}
-@media (max-width: 700px){.card-grid.five{grid-template-columns:repeat(2, minmax(0,1fr));}}
-@media (max-width: 460px){.card-grid.five{grid-template-columns:1fr;}}
+    /* Top 5 as panel */
+    .featured-panel {
+      margin-top: 26px
+    }
 
-/* Info toggle in hero */
-.hero-info{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin:8px 0 6px 0}
-.info-toggle{width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
-  background:transparent;color:#e9edf1;cursor:pointer;font-weight:700;line-height:1}
-.info-toggle:hover{border-color:#d3b574;box-shadow:0 0 0 3px rgba(211,181,116,.15)}
-.info-pane[hidden]{display:none}
-.info-pane{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;color:#aeb4ba;font-size:.95rem}
+    .featured-panel .section-title {
+      margin: 0 0 12px 0;
+      font-size: 1.05rem;
+      opacity: .95
+    }
 
-/* Top 5 as panel */
-.featured-panel{margin-top:26px}
-.featured-panel .section-title{margin:0 0 12px 0;font-size:1.05rem;opacity:.95}
-.card-grid.five{display:grid;gap:14px;grid-template-columns:repeat(5, minmax(0,1fr));}
-@media (max-width: 1100px){.card-grid.five{grid-template-columns:repeat(3, minmax(0,1fr));}}
-@media (max-width: 700px){.card-grid.five{grid-template-columns:repeat(2, minmax(0,1fr));}}
-@media (max-width: 460px){.card-grid.five{grid-template-columns:1fr;}}
-/* Info toggle in hero */
-.hero-info{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin:8px 0 6px 0}
-.info-toggle{width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
-  background:transparent;color:#e9edf1;cursor:pointer;font-weight:700;line-height:1}
-.info-toggle:hover{border-color:#d3b574;box-shadow:0 0 0 3px rgba(211,181,116,.15)}
-.info-pane[hidden]{display:none}
-.info-pane{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;color:#aeb4ba;font-size:.95rem}
+    .card-grid.five {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
 
-/* Center Trustpilot rating inside the [i] info pane only */
-#hero-info-text .hero-rating {
-  display: block;
-  margin: 10px auto 0;
-  max-width: 100%;
-  height: auto;
-}
+    @media (max-width: 1100px) {
+      .card-grid.five {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
 
-/* --- Looklist: fine spacing tweaks --- */
-/* Reduce gap between tagline and [i] by ~1 line */
-.hero-info { margin-top: 6px !important; } /* previously ~16-20px */
+    @media (max-width: 700px) {
+      .card-grid.five {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
 
-/* Reduce gap between [i] and 'Looklist Top 5' by ~1 line */
-.hero-box { margin-bottom: 16px !important; } /* tighten hero bottom */
-.featured-panel { margin-top: 16px !important; } /* ensure close but readable */
+    @media (max-width: 460px) {
+      .card-grid.five {
+        grid-template-columns: 1fr;
+      }
+    }
 
-/* Add extra line between 'Featured listings will appear here.' and UK panel */
-.featured-panel .card-grid { margin-bottom: 16px !important; } /* extra line space */
-</style></head>
+    /* Info toggle in hero */
+    .hero-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+      margin: 8px 0 6px 0
+    }
+
+    .info-toggle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: transparent;
+      color: #e9edf1;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .info-toggle:hover {
+      border-color: #d3b574;
+      box-shadow: 0 0 0 3px rgba(211, 181, 116, .15)
+    }
+
+    .info-pane[hidden] {
+      display: none
+    }
+
+    .info-pane {
+      background: rgba(0, 0, 0, .25);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 12px;
+      padding: 12px;
+      color: #aeb4ba;
+      font-size: .95rem
+    }
+
+    /* Top 5 as panel */
+    .featured-panel {
+      margin-top: 26px
+    }
+
+    .featured-panel .section-title {
+      margin: 0 0 12px 0;
+      font-size: 1.05rem;
+      opacity: .95
+    }
+
+    .card-grid.five {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1100px) {
+      .card-grid.five {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .card-grid.five {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 460px) {
+      .card-grid.five {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Info toggle in hero */
+    .hero-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+      margin: 8px 0 6px 0
+    }
+
+    .info-toggle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: transparent;
+      color: #e9edf1;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .info-toggle:hover {
+      border-color: #d3b574;
+      box-shadow: 0 0 0 3px rgba(211, 181, 116, .15)
+    }
+
+    .info-pane[hidden] {
+      display: none
+    }
+
+    .info-pane {
+      background: rgba(0, 0, 0, .25);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 12px;
+      padding: 12px;
+      color: #aeb4ba;
+      font-size: .95rem
+    }
+
+    /* Center Trustpilot rating inside the [i] info pane only */
+    #hero-info-text .hero-rating {
+      display: block;
+      margin: 10px auto 0;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* --- Looklist: fine spacing tweaks --- */
+    /* Reduce gap between tagline and [i] by ~1 line */
+    .hero-info {
+      margin-top: 6px !important;
+    }
+
+    /* previously ~16-20px */
+
+    /* Reduce gap between [i] and 'Looklist Top 5' by ~1 line */
+    .hero-box {
+      margin-bottom: 16px !important;
+    }
+
+    /* tighten hero bottom */
+    .featured-panel {
+      margin-top: 16px !important;
+    }
+
+    /* ensure close but readable */
+
+    /* Add extra line between 'Featured listings will appear here.' and UK panel */
+    .featured-panel .card-grid {
+      margin-bottom: 16px !important;
+    }
+
+    /* extra line space */
+  </style>
+</head>
+
 <body>
-<header class="header-bar">
-<a href="index.html"><img alt="Looklist Logo" class="logo-img" src="assets/logo1.png"/></a>
-<span class="header-title">Looklist Development BETA Preview</span>
-<a class="home-link hide-mobile" href="index.html">Home</a>
-<a class="home-link nav-desktop" href="services.html">Services</a>
-<a class="home-link nav-desktop" href="bookings.html">Bookings</a>
-<a class="home-link nav-desktop" href="messages.html">Messages</a>
-<a class="home-link nav-desktop" href="profile.html">Profile</a>
-<a class="home-link nav-desktop" data-auth="signin" href="signin.html">Sign in</a>
-<a class="home-link show-mobile" href="services.html">Services</a>
-<a class="home-link show-mobile" href="bookings.html">Bookings</a>
-<a class="home-link show-mobile" href="messages.html">Messages</a>
-<a class="home-link show-mobile" href="profile.html">Profile</a>
-</header>
-<main class="hero">
-<div class="hero-box">
-<img alt="Looklist Logo" class="main-logo-img" src="assets/logo1.png"/>
-<h1 class="hero-title"><span class="white-accent">Looklist</span></h1>
-<h2 class="hero-desc">
-        Discover, book, and pay for <span class="white-accent">premium beauty services</span> near you.
-      </h2>
-<div class="hero-info"><button aria-controls="hero-info-text" aria-expanded="false" class="info-toggle" title="About Looklist" type="button">i</button><div class="info-pane" hidden="True" id="hero-info-text"><p>Looklist is a premium web and mobile marketplace that connects customers with local beauty merchants. It prioritizes security, luxury design, and a seamless user experience, featuring escrow-protected transactions to build trust. The platform aims to simplify the discovery and booking of beauty services while ensuring reliable income and visibility for merchants.</p><img alt="Customer ratings and reviews" class="hero-rating" loading="lazy" src="assets/rating.png" style=";margin-top:10px;max-width:100%"/></div></div>
-<!-- Top 5 Listings hook (no visual change) -->
-<div hidden="" id="top-listings-hook"></div>
-<div class="service-row" id="services"><section class="panel featured-panel" id="featured"><h3 class="section-title">Looklist Top 5</h3><div class="card-grid five" id="top5-grid"><div class="featured-fallback" style="grid-column:1/-1;opacity:.75;font-size:.95rem">Featured listings will appear here.</div></div></section>
-<div class="info-box">
-<div class="info-text">
-<!-- Featured Top 5 (visual section) -->
 
+  <div id="loading-screen" style="text-align: center; margin-top: 50px;">
+    <h1>Loading... please wait...</h1>
+  </div>
 
-    Available all over the UK, find professionals independent salons in you area or schedule mobile professional services
-          <br/>
-<a class="cta-btn" href="services.html">Start Now</a>
-</div>
-<img alt="Coverage across the UK: professionals, independent salons, and mobile services" class="info-media" loading="lazy" src="assets/uk-coverage.png"/>
-</div>
-<div class="info-box" style="margin-top: 1rem;">
-<div class="info-text">
-          Seeking to grow your business and join our reliable independent professionals in the fields of hair styling, nail technology, makeup artistry, and teeth application who can provide high-quality services at competitive rates?
-          <br/>
-<a class="cta-btn" href="signup.html">Sign Up</a>
-</div>
-<img alt="Promotional image: independent professionals for hair, nails, makeup, and teeth" class="info-media" loading="lazy" src="assets/ad.png"/>
-</div>
-</div>
-<a aria-hidden="true" class="sr-only" id="messages"></a>
-<a aria-hidden="true" class="sr-only" id="profile"></a>
-</div></main>
-<footer>
-<nav class="footer-nav">
-<a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
-<a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
-<a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
-</nav>
-<div>Copyright 2025 Looklist. All rights reserved.</div>
-</footer>
-<nav aria-label="Primary" class="mobile-bottom-nav">
-<a aria-current="page" class="nav-item" href="index.html">
-<img alt="" aria-hidden="true" class="nav-icon" src="assets/home.png"/>
-<span class="nav-label">Home</span>
-</a>
-<a class="nav-item" href="services.html">
-<img alt="" aria-hidden="true" class="nav-icon" src="assets/service.png"/>
-<span class="nav-label">Services</span>
-</a>
-<a class="nav-item" href="bookings.html">
-<img alt="" aria-hidden="true" class="nav-icon" src="assets/bookings.png"/>
-<span class="nav-label">Bookings</span>
-</a>
-<a class="nav-item" href="messages.html">
-<img alt="" aria-hidden="true" class="nav-icon" src="assets/messages.png"/>
-<span class="nav-label">Messages</span>
-</a>
-<a class="nav-item" href="profile.html">
-<img alt="" aria-hidden="true" class="nav-icon" src="assets/profile.png"/>
-<span class="nav-label">Profile</span>
-</a>
-</nav>
-<script>
-  (function(){
-    const btn = document.querySelector('.info-toggle');
-    const pane = document.getElementById('hero-info-text');
-    if(btn && pane){
-      btn.addEventListener('click', ()=>{
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', String(!open));
-        if(open){ pane.setAttribute('hidden',''); } else { pane.removeAttribute('hidden'); }
-      });
+  <div id="secret-box" style="display: none;">
+
+    <header class="header-bar">
+      <a href="index.html"><img alt="Looklist Logo" class="logo-img" src="assets/logo1.png" /></a>
+      <span class="header-title">Looklist Development BETA Preview</span>
+      <a class="home-link hide-mobile" href="index.html">Home</a>
+      <a class="home-link nav-desktop" href="services.html">Services</a>
+      <a class="home-link nav-desktop" href="bookings.html">Bookings</a>
+      <a class="home-link nav-desktop" href="messages.html">Messages</a>
+      <a class="home-link nav-desktop" href="profile.html">Profile</a>
+      <a class="home-link nav-desktop merchant-only" href="merchant/listings.html" style="display: none;">My
+        Listings</a>
+      <a class="home-link nav-desktop" data-auth="signin" href="signin.html">Sign in</a>
+      <a class="home-link show-mobile" href="services.html">Services</a>
+      <a class="home-link show-mobile" href="bookings.html">Bookings</a>
+      <a class="home-link show-mobile" href="messages.html">Messages</a>
+      <a class="home-link show-mobile" href="profile.html">Profile</a>
+    </header>
+    <main class="hero">
+      <div class="hero-box">
+        <img alt="Looklist Logo" class="main-logo-img" src="assets/logo1.png" />
+        <h1 class="hero-title"><span class="white-accent">Looklist</span></h1>
+        <h2 class="hero-desc">
+          Discover, book, and pay for <span class="white-accent">premium beauty services</span> near you.
+        </h2>
+        <div class="hero-info">
+          <button aria-controls="hero-info-text" aria-expanded="false" class="info-toggle" title="About Looklist"
+            type="button">i</button>
+          <div class="info-pane" hidden id="hero-info-text">
+            <p>Looklist is a premium web and mobile marketplace that connects customers with local beauty merchants. It
+              prioritizes security, luxury design, and a seamless user experience, featuring escrow-protected
+              transactions to build trust. The platform aims to simplify the discovery and booking of beauty services
+              while ensuring reliable income and visibility for merchants.</p>
+            <img alt="Customer ratings and reviews" class="hero-rating" loading="lazy" src="assets/rating.png"
+              style="margin-top:10px; max-width:100%" />
+          </div>
+        </div>
+        <div hidden="" id="top-listings-hook"></div>
+        <div class="service-row" id="services">
+          <section class="panel featured-panel" id="featured">
+            <h3 class="section-title">Looklist Top 5</h3>
+            <div class="card-grid five" id="top5-grid">
+              <div class="featured-fallback" style="grid-column:1/-1;opacity:.75;font-size:.95rem">Featured listings
+                will appear here.</div>
+            </div>
+          </section>
+          <div class="info-box">
+            <div class="info-text">
+              Available all over the UK, find professionals independent salons in you area or schedule mobile
+              professional services within minutes!
+              <br />
+              <a class="cta-btn" href="services.html">Start Now</a>
+            </div>
+            <img alt="Coverage across the UK: professionals, independent salons, and mobile services" class="info-media"
+              loading="lazy" src="assets/uk-coverage.png" />
+          </div>
+          <div class="info-box" style="margin-top: 1rem;">
+            <div class="info-text">
+              Seeking to grow your business and join our reliable independent professionals in the fields of hair
+              styling, nail technology, makeup artistry, and teeth application who can provide high-quality services at
+              competitive rates?
+              <br />
+              <a class="cta-btn" href="signup.html">Sign Up</a>
+            </div>
+            <img alt="Promotional image: independent professionals for hair, nails, makeup, and teeth"
+              class="info-media" loading="lazy" src="assets/ad.png" />
+          </div>
+        </div>
+        <a aria-hidden="true" class="sr-only" id="messages"></a>
+        <a aria-hidden="true" class="sr-only" id="profile"></a>
+      </div>
+    </main>
+    <footer>
+      <nav class="footer-nav">
+        <a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
+        <a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
+        <a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
+      </nav>
+      <div>Copyright 2025 Looklist. All rights reserved.</div>
+    </footer>
+    <nav aria-label="Primary" class="mobile-bottom-nav">
+      <a aria-current="page" class="nav-item" href="index.html">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/home.png" />
+        <span class="nav-label">Home</span>
+      </a>
+      <a class="nav-item" href="services.html">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/service.png" />
+        <span class="nav-label">Services</span>
+      </a>
+      <a class="nav-item" href="bookings.html">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/bookings.png" />
+        <span class="nav-label">Bookings</span>
+      </a>
+      <a class="nav-item" href="messages.html">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/messages.png" />
+        <span class="nav-label">Messages</span>
+      </a>
+      <a class="nav-item merchant-only" href="merchant/listings.html" style="display: none;">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/service.png" />
+        <span class="nav-label">My Listings</span>
+      </a>
+      <a class="nav-item" href="profile.html">
+        <img alt="" aria-hidden="true" class="nav-icon" src="assets/profile.png" />
+        <span class="nav-label">Profile</span>
+      </a>
+    </nav>
+
+  </div>
+  <script>
+    (function () {
+      const btn = document.querySelector('.info-toggle');
+      const pane = document.getElementById('hero-info-text');
+      if (btn && pane) {
+        btn.addEventListener('click', () => {
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!open));
+          if (open) { pane.setAttribute('hidden', ''); } else { pane.removeAttribute('hidden'); }
+        });
+      }
+    })();
+  </script>
+
+  <script type="module">
+    import { authInit, signOut } from './auth.js';
+    import { setupMerchantNav } from './nav-helper.js';
+
+    async function checkAccess() {
+      const box = document.getElementById('secret-box');
+      const loader = document.getElementById('loading-screen');
+
+      // Safety timer (Mobile fix) - Ensures content shows even if network slow
+      const safetyTimer = setTimeout(() => {
+        if (loader && loader.style.display !== 'none') {
+          // Show content regardless of login status
+          if (loader) loader.style.display = 'none';
+          if (box) box.style.display = 'block';
+        }
+      }, 2000);
+
+      try {
+        // Run auth check BUT with requireAuth: false
+        // This means "Tell me if user is logged in, but DON'T redirect if not"
+        const { user } = await authInit({ requireAuth: false });
+
+        clearTimeout(safetyTimer);
+
+        // ALWAYS Show content (This is a public page)
+        if (loader) loader.style.display = 'none';
+        if (box) box.style.display = 'block';
+
+        // Update Header Button Logic
+        const signInLink = document.querySelector('[data-auth="signin"]');
+        if (user) {
+          // If Logged In -> Change to "Sign Out"
+          if (signInLink) {
+            signInLink.textContent = "Sign Out";
+            signInLink.href = "#";
+            signInLink.addEventListener('click', async (e) => {
+              e.preventDefault();
+              await signOut();
+              window.location.reload(); // Reload to refresh state
+            });
+          }
+        }
+        else {
+          // If Guest -> Keep as "Sign In" (No changes needed)
+        }
+
+        // Setup merchant navigation
+        await setupMerchantNav();
+
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        // Even on error, show the page
+        if (loader) loader.style.display = 'none';
+        if (box) box.style.display = 'block';
+      }
     }
-  })();
-</script>
-<script type="module">
-import { authInit, signOut } from './auth.js';
 
-authInit().then(({ user }) => {
-  const links = document.querySelectorAll('[data-auth="signin"]');
-  links.forEach((el) => {
-    if (user) {
-      el.textContent = 'Sign Out';
-      el.onclick = (event) => {
-        event.preventDefault();
-        signOut();
-      };
-      el.setAttribute('href', '#');
-    } else {
-      el.textContent = 'Sign in';
-      el.onclick = null;
-      el.setAttribute('href', 'signin.html');
-    }
-  });
-});
-</script>
+    checkAccess();
+  </script>
+  
+  <script type="module" src="home-listings.js"></script>
 </body>
+
 </html>

@@ -144,12 +144,31 @@ async function handleSubmit(event) {
     clearStoredAuthFlowType();
     setStatus('success', 'Signed in. Redirecting...');
     
-    // Get safe validated next page
-    const nextPage = getSafeNextPage();
+    // --- TASK 3 FIX START ---
+    // 1. Get the current URL parameters (this is the sign-in page's URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextPage = getSafeNextPage(); // This gets 'listing.html'
     
+    // 2. Resolve the base URL (e.g., http://localhost/listing.html)
+    let destination = resolveAppUrl(nextPage);
+    
+    // 3. Create a URL object so we can easily add parameters back
+    const targetUrl = new URL(destination);
+    
+    // 4. If we have an ID or slotId, put them back on the destination URL
+    if (urlParams.has('id')) {
+      targetUrl.searchParams.set('id', urlParams.get('id'));
+    }
+    if (urlParams.has('slotId')) {
+      targetUrl.searchParams.set('slotId', urlParams.get('slotId'));
+    }
+
     window.setTimeout(() => {
-      window.location.assign(resolveAppUrl(nextPage));
+      // 5. Use the full URL with parameters
+      window.location.assign(targetUrl.toString());
     }, 600);
+    // --- TASK 3 FIX END ---
+
   } catch (error) {
     console.error('[Signin] submit error', error);
     setStatus('error', error.message || 'Failed to sign in.');

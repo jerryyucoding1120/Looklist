@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Signing in…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <p id="status">Finalising sign-in…</p>
+
+  <script type="module">
+    import { supabase } from '/auth.js';
+
+    const statusEl = document.getElementById('status');
+
+    async function handleCallback() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!data.session) throw new Error('No session found');
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_merchant')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (profile?.is_merchant) {
+          window.location.replace('/merchant/index.html');
+        } else {
+          window.location.replace('/profile.html');
+        }
+      } catch (err) {
+        console.error('[Auth Callback]', err);
+        statusEl.textContent =
+          'Email verified, but sign-in failed. Please log in manually.';
+      }
+    }
+
+    handleCallback();
+  </script>
+</body>
+</html>

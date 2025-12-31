@@ -220,7 +220,18 @@ export async function authInit(options = {}) {
     onNoSession?.({ flowType, urlResult });
     if (requireAuth) {
       window.setTimeout(() => {
-        window.location.assign(toAbsoluteUrl(redirectTo));
+        // 1. Get the current filename (e.g., 'bookings.html')
+        const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // 2. Build a clean relative path to signin.html
+        // This bypasses the absolute URL logic that is causing the %3F error
+        const cleanPath = 'signin.html';
+        
+        // 3. Construct the URL manually
+        const finalUrl = cleanPath + '?next=' + encodeURIComponent(currentFile);
+        
+        console.log('[Auth] Redirecting to:', finalUrl);
+        window.location.href = finalUrl;
       }, 50);
     }
   }
@@ -306,7 +317,7 @@ export async function signOut({ scope = 'global' } = {}) {
     spSession.auth.signOut({ scope }),
   ]);
   clearStoredAuthFlowType();
-  window.location.assign(toAbsoluteUrl('signin.html'));
+  window.location.href = 'signin.html';
 }
 
 export async function resetPasswordForEmail(email, redirectTo = 'reset.html') {
@@ -380,3 +391,4 @@ export function getLastAuthFlowType() {
 }
 
 export { toAbsoluteUrl as resolveAppUrl, clearStoredAuthFlowType };
+

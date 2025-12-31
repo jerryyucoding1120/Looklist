@@ -6,182 +6,180 @@
   <title>LookList - Bookings</title>
   <meta name="description" content="View and manage your LookList bookings." />
   <link rel="icon" href="assets/logo1.png" type="image/png" sizes="any" />
-  <link rel="apple-touch-icon" href="assets/logo1.png" />
-  <link rel="shortcut icon" href="assets/logo1.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  
   <style>
+    /* --- CSS STYLES --- */
     :root {
       --background: linear-gradient(135deg, #131415 0%, #09090a 100%);
-      --silver: #cfd8dc;
-      --grey: #424549;
-      --dark-grey: #181a1b;
-      --black: #101112;
-      --card: #23272a;
+      --silver: #cfd8dc; --grey: #424549; --card: #23272a; 
       --box-bg: linear-gradient(135deg, #141516 0%, #18191a 100%);
       --service-bg: linear-gradient(135deg, #0c0d0e 0%, #191a1b 100%);
-      --text: #e0e0e0;
-      --font-header: 'Poppins', sans-serif;
-      --font-body: 'Inter', Arial, sans-serif;
-      --accent: #cfd8dc;
-      --footer-bg: #101112;
-      --box-border: #252728;
-      --button-bg: #23272a;
-      --button-hover-bg: transparent;
-      --button-hover-border: #cfd8dc;
-      --button-hover-text: #cfd8dc;
-      --white: #fff;
-      --success: #66bb6a;
-      --warning: #ffa726;
+      --text: #e0e0e0; --font-header: 'Poppins', sans-serif; --font-body: 'Inter', Arial, sans-serif;
+      --accent: #cfd8dc; --footer-bg: #101112; --box-border: #252728; --button-bg: #23272a;
     }
-    html, body { background: var(--background); color: var(--text); font-family: var(--font-body); margin: 0; padding: 0; min-height: 100vh; font-size: 18px; -webkit-font-smoothing: antialiased; }
-    h1, h2, h3, h4 { font-family: var(--font-header); font-weight: bold; margin: 0 0 0.5em 0; letter-spacing: 1px; color: var(--silver); }
-
-    .header-bar { width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 1.1rem 2rem 1.1rem 1rem; background: var(--dark-grey); box-sizing: border-box; gap: 1.4rem; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--box-border); }
+    html, body { background: var(--background); color: var(--text); font-family: var(--font-body); margin: 0; padding: 0; min-height: 100vh; font-size: 18px; }
+    h1, h2 { font-family: var(--font-header); font-weight: bold; margin: 0 0 0.5em 0; color: var(--silver); }
+    
+    /* Header */
+    .header-bar { width: 100%; display: flex; align-items: center; padding: 1.1rem 2rem 1.1rem 1rem; background: #181a1b; border-bottom: 1.5px solid var(--box-border); gap: 1.4rem; }
     .logo-img { height: 42px; width: auto; border-radius: 12px; border: 2px solid var(--box-border); }
-    .header-title { font-family: var(--font-header); font-size: 1.9rem; font-weight: bold; color: var(--silver); margin-right: auto; letter-spacing: 1.5px; }
-    .home-link { color: var(--silver); font-family: var(--font-header); font-weight: bold; font-size: 1.18rem; text-decoration: none; background: var(--button-bg); border: 2px solid transparent; border-radius: 24px; padding: 0.32em 1.25em; cursor: pointer; transition: color 0.18s, border-color 0.18s, background 0.18s; }
-    .home-link:hover, .home-link:focus { color: var(--button-hover-text); background: var(--button-hover-bg); border-color: var(--button-hover-border); }
-    .show-mobile { display: none; } .hide-mobile { display: inline-block; }
-    @media (max-width: 600px) {
-      .show-mobile { display: inline-block; }
-      .hide-mobile { display: none; }
-      .header-bar .home-link { display: none !important; }
-    }
-    .header-bar .nav-desktop { display: none; }
-    @media (min-width: 1024px) { .header-bar .nav-desktop { display: inline-block; } }
-
-    .content { max-width: 900px; margin: 2rem auto 3rem; padding: 2rem 1.25rem; line-height: 1.65; background: var(--box-bg); border-radius: 20px; border: 2px solid var(--box-border); box-shadow: 0 4px 32px rgba(44,46,48,0.15); }
-    .intro { color: var(--accent); font-size: 1.08rem; margin-bottom: 1.1rem; text-align: center; }
-
+    .header-title { font-family: var(--font-header); font-size: 1.9rem; font-weight: bold; color: var(--silver); margin-right: auto; }
+    .home-link { color: var(--silver); font-family: var(--font-header); font-weight: bold; text-decoration: none; background: var(--button-bg); border-radius: 24px; padding: 0.32em 1.25em; transition: 0.2s; }
+    
+    /* Content */
+    .content { max-width: 900px; margin: 2rem auto; padding: 2rem 1.25rem; background: var(--box-bg); border-radius: 20px; border: 2px solid var(--box-border); }
+    .intro { color: var(--accent); text-align: center; margin-bottom: 2rem; }
     .booking-list { display: grid; gap: 1rem; margin-top: 1rem; }
-    .booking-card {
-      background: var(--service-bg);
-      border-radius: 18px;
-      border: 2px solid var(--box-border);
-      padding: 1rem;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 0.75rem 1rem;
-      align-items: center;
-      transition: box-shadow 0.18s, border-color 0.18s, background 0.18s;
-    }
-    .booking-card:hover, .booking-card:focus-within { box-shadow: 0 8px 32px rgba(66,69,73,0.18); border-color: var(--silver); background: linear-gradient(135deg, #171819 0%, #232324 100%); }
-    .booking-title { font-family: var(--font-header); font-size: 1.15rem; color: var(--white); font-weight: bold; margin: 0 0 0.5rem 0; }
+
+    /* Booking Card */
+    .booking-card { background: var(--service-bg); border-radius: 18px; border: 2px solid var(--box-border); padding: 1.2rem; display: grid; grid-template-columns: auto 1fr auto; gap: 1.5rem; align-items: center; transition: all 0.2s; }
+    .booking-card:hover { border-color: var(--silver); background: rgba(255,255,255,0.02); }
+    
+    .booking-img-container { width: 100px; height: 100px; flex-shrink: 0; }
+    .booking-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid var(--box-border); background: #000; }
+
+    .booking-details h3 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #fff; }
     .booking-meta { color: var(--accent); font-size: 0.95rem; line-height: 1.6; }
-    .booking-status { margin-top: 0.5rem; font-size: 0.95rem; }
-    .status-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.7rem; background: rgba(0,0,0,0.3); border-radius: 8px; }
-    .card-actions { display: flex; flex-direction: column; gap: 0.6rem; }
-    .btn {
-      background: var(--button-bg); color: var(--silver); border: 2px solid var(--box-border);
-      padding: 0.55rem 0.9rem; border-radius: 12px; font-weight: 700; cursor: pointer; text-decoration: none;
-      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-      font-family: var(--font-body); font-size: 0.95rem; text-align: center;
-    }
-    .btn:hover, .btn:focus { background: var(--button-hover-bg); color: var(--button-hover-text); border-color: var(--button-hover-border); box-shadow: 0 6px 24px rgba(44,46,48,0.22); outline: none; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-cancel { border-color: #f44336; color: #f44336; }
-    .btn-cancel:hover, .btn-cancel:focus { background: rgba(244, 67, 54, 0.1); border-color: #f44336; color: #f44336; }
-    .btn-secondary { border-color: var(--accent); }
-    .refresh-btn {
-      background: var(--button-bg); color: var(--silver); border: 2px solid var(--accent);
-      padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; cursor: pointer;
-      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-      font-family: var(--font-body); font-size: 1rem; margin-bottom: 1rem;
-    }
-    .refresh-btn:hover, .refresh-btn:focus { background: var(--button-hover-bg); color: var(--button-hover-text); border-color: var(--button-hover-border); box-shadow: 0 6px 24px rgba(44,46,48,0.22); outline: none; }
-    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--silver); opacity: 0.7; font-size: 1.05rem; }
-    .error-state { text-align: center; padding: 3rem 1rem; color: #f44336; font-size: 1.05rem; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+    .booking-status { margin-top: 0.6rem; font-size: 0.9rem; }
+    
+    /* Buttons */
+    .card-actions { display: flex; flex-direction: column; gap: 0.6rem; min-width: 120px; }
+    .btn { padding: 0.6rem 1rem; border-radius: 10px; font-weight: 700; cursor: pointer; border: 2px solid transparent; font-family: var(--font-body); font-size: 0.9rem; text-align: center; transition: 0.2s; }
+    
+    .btn-message { border-color: #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); }
+    .btn-message:hover { background: #3498db; color: white; }
+    
+    .btn-cancel { border-color: #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+    .btn-cancel:hover { background: #e74c3c; color: white; }
+    
+    .btn-review { border-color: #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
+    .btn-review:hover { background: #f1c40f; color: #000; }
 
-    footer { width: 100%; background: var(--footer-bg); color: var(--silver); text-align: center; padding: 2rem 1rem 1rem 1rem; margin-top: 3rem; letter-spacing: 0.5px; font-size: 1.05rem; border-top: 1px solid var(--box-border); box-shadow: 0 -2px 16px rgba(44,46,48,0.08); }
-    .footer-nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
-    .footer-btn { background: none; border: 2px solid transparent; color: var(--silver); font-family: var(--font-body); font-size: 1.07rem; font-weight: 500; padding: 0.2em 0.7em; cursor: pointer; border-radius: 6px; transition: background 0.18s, color 0.18s, border-color 0.18s; text-decoration: underline; }
+    .refresh-btn { background: var(--button-bg); color: var(--silver); border: 2px solid var(--accent); width: 100%; margin-bottom: 1rem; }
 
+    /* REVIEW MODAL CSS */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); z-index: 2000;
+      display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background: var(--box-bg); border: 2px solid var(--box-border);
+      padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px;
+      text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .star-rating { display: flex; justify-content: center; gap: 10px; margin: 1.5rem 0; font-size: 2rem; cursor: pointer; }
+    .star { color: #424549; transition: color 0.2s; }
+    .star.active { color: #f1c40f; }
+    .review-textarea {
+      width: 100%; height: 100px; background: #0c0d0e; border: 1px solid var(--box-border);
+      border-radius: 8px; padding: 10px; color: var(--text); font-family: var(--font-body);
+      margin-bottom: 1.5rem; resize: none;
+    }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* Footer & Mobile */
+    footer { text-align: center; padding: 2rem; margin-top: 3rem; border-top: 1px solid var(--box-border); color: var(--silver); }
+    .footer-nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; }
     .mobile-bottom-nav { display: none; }
-    @media (max-width: 600px) {
-      .content { padding: 1.1rem; }
-      .footer-nav { gap: 1rem; }
+    .show-mobile { display: none; } .hide-mobile { display: inline-block; }
 
-      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-      footer { padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom)); }
-      .mobile-bottom-nav {
-        position: fixed; left: 0; right: 0; bottom: 0; height: 64px;
-        padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) 8px;
-        background: var(--footer-bg); border-top: 1px solid var(--box-border);
-        display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-      }
-      .mobile-bottom-nav .nav-item {
-        display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-decoration: none; color: var(--silver); font-size: 0.72rem; padding: 0.25rem 0.5rem; min-width: 64px;
-      }
-      .mobile-bottom-nav .nav-item:hover, .mobile-bottom-nav .nav-item:focus { color: var(--white); }
-      .mobile-bottom-nav .nav-icon { width: 42px; height: 42px; object-fit: contain; border-radius: 6px; border: 1px solid var(--box-border); background: var(--button-bg); }
+    @media (max-width: 600px) {
+      .show-mobile { display: inline-block; } .hide-mobile { display: none; }
+      .booking-card { grid-template-columns: 1fr; text-align: center; }
+      .booking-img-container { margin: 0 auto; width: 100%; height: 180px; }
+      .card-actions { flex-direction: row; width: 100%; margin-top: 1rem; }
+      .btn { flex: 1; }
+      .mobile-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: var(--footer-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--box-border); z-index: 1000; }
+      .nav-item { color: var(--silver); text-decoration: none; font-size: 0.7rem; text-align: center; display: flex; flex-direction: column; align-items: center; }
+      .nav-icon { width: 24px; height: 24px; margin-bottom: 4px; }
     }
   </style>
-  <link rel="stylesheet" href="assets/css/background.css"/>
 </head>
+
 <body>
-  <header class="header-bar">
-    <a href="index.html"><img src="assets/logo1.png" alt="LookList Logo" class="logo-img" /></a>
-    <span class="header-title">Looklist</span>
-    <a href="index.html" class="home-link hide-mobile">Home</a>
-    <a href="services.html" class="home-link nav-desktop">Services</a>
-    <a href="bookings.html" class="home-link nav-desktop" aria-current="page">Bookings</a>
-    <a href="messages.html" class="home-link nav-desktop">Messages</a>
-    <a href="profile.html" class="home-link nav-desktop">Profile</a>
-    <a href="signin.html" class="home-link nav-desktop" data-auth="signin">Sign in</a>
-    <a href="services.html" class="home-link show-mobile">Services</a>
-    <a href="bookings.html" class="home-link show-mobile" aria-current="page">Bookings</a>
-    <a href="messages.html" class="home-link show-mobile">Messages</a>
-    <a href="profile.html" class="home-link show-mobile">Profile</a>
-  </header>
+  <div id="loading-screen" style="text-align: center; margin-top: 100px;">
+    <h1>Loading... please wait...</h1>
+  </div>
 
-  <main class="content">
-    <h1>Bookings</h1>
-    <p class="intro">Manage your upcoming and past bookings.</p>
+  <div id="secret-box" style="display: none;">
+    <header class="header-bar">
+      <a href="index.html"><img src="assets/logo1.png" alt="Logo" class="logo-img" /></a>
+      <span class="header-title">Looklist</span>
+      <a href="index.html" class="home-link hide-mobile">Home</a>
+    </header>
 
-    <button id="refresh-bookings-btn" class="refresh-btn" aria-label="Refresh bookings list">
-      🔄 Refresh
-    </button>
+    <main class="content">
+      <h1>My Bookings</h1>
+      <p class="intro">Manage your upcoming and past bookings.</p>
+      <button id="refresh-bookings-btn" class="refresh-btn">🔄 Refresh List</button>
+      <div class="booking-list"></div>
+    </main>
 
-    <div class="booking-list" role="list" aria-live="polite" aria-atomic="false">
-      <!-- Filled by bookings-page.js -->
-    </div>
-  </main>
+    <footer>
+      <nav class="footer-nav">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+      <div>&copy; 2025 LookList. All rights reserved.</div>
+    </footer>
 
-  <footer>
-    <nav class="footer-nav">
-      <a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
-      <a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
-      <a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
+    <nav class="mobile-bottom-nav">
+      <a class="nav-item" href="index.html"><img class="nav-icon" src="assets/home.png" alt="">Home</a>
+      <a class="nav-item" href="services.html"><img class="nav-icon" src="assets/service.png" alt="">Services</a>
+      <a class="nav-item" href="bookings.html"><img class="nav-icon" src="assets/bookings.png" alt="">Bookings</a>
+      <a class="nav-item" href="messages.html"><img class="nav-icon" src="assets/messages.png" alt="">Messages</a>
+      <a class="nav-item" href="profile.html"><img class="nav-icon" src="assets/profile.png" alt="">Profile</a>
     </nav>
-    <div>Copyright 2025 LookList. All rights reserved.</div>
-  </footer>
 
-  <nav class="mobile-bottom-nav" aria-label="Primary">
-    <a class="nav-item" href="index.html">
-      <img class="nav-icon" src="assets/home.png" alt="" aria-hidden="true" />
-      <span class="nav-label">Home</span>
-    </a>
-    <a class="nav-item" href="services.html">
-      <img class="nav-icon" src="assets/service.png" alt="" aria-hidden="true" />
-      <span class="nav-label">Services</span>
-    </a>
-    <a class="nav-item" href="bookings.html" aria-current="page">
-      <img class="nav-icon" src="assets/bookings.png" alt="" aria-hidden="true" />
-      <span class="nav-label">Bookings</span>
-    </a>
-    <a class="nav-item" href="messages.html">
-      <img class="nav-icon" src="assets/messages.png" alt="" aria-hidden="true" />
-      <span class="nav-label">Messages</span>
-    </a>
-    <a class="nav-item" href="profile.html">
-      <img class="nav-icon" src="assets/profile.png" alt="" aria-hidden="true" />
-      <span class="nav-label">Profile</span>
-    </a>
-  </nav>
+    <div id="review-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <h3>Rate your experience</h3>
+        <p style="color: var(--accent); font-size: 0.9rem;">Tap a star to rate</p>
+        
+        <div class="star-rating" id="star-container">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
 
-  <script type="module" src="bookings-page.js"></script>
+        <textarea id="review-text" class="review-textarea" placeholder="Write a brief comment (optional)..."></textarea>
+        
+        <div class="modal-actions">
+          <button id="cancel-review-btn" class="btn" style="border-color: var(--grey);">Cancel</button>
+          <button id="submit-review-btn" class="btn btn-review">Submit Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="bookings-page.js?v=999"></script>
+
+  <script type="module">
+    import { authInit, signOut } from './auth.js';
+    async function checkAccess() {
+      const box = document.getElementById('secret-box');
+      const loader = document.getElementById('loading-screen');
+      const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+      const safety = setTimeout(() => { if (loader && loader.style.display !== 'none') window.location.reload(); }, 5000);
+
+      try {
+        let result = await authInit({ requireAuth: false });
+        let currentUser = result.user;
+        if (!currentUser) { await wait(1000); result = await authInit({ requireAuth: false }); currentUser = result.user; }
+
+        clearTimeout(safety);
+        if (currentUser) {
+          loader.style.display = 'none';
+          box.style.display = 'block';
+        } else { window.location.href = "signin.html"; }
+      } catch (error) { window.location.href = "signin.html"; }
+    }
+    checkAccess();
+  </script>
 </body>
 </html>
-
-

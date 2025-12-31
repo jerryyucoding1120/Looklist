@@ -46,3 +46,61 @@ html body {
   border-radius: 12px;
   backdrop-filter: saturate(1.1) blur(1px);
 }
+
+/* Slot Button States */
+.slot-picker-btn {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid #252728;
+}
+
+.slot-picker-btn:hover:not(:disabled) {
+  background: #2a2d2e;
+  border-color: #cfd8dc;
+  transform: translateY(-1px);
+}
+
+.slot-picker-btn.selected {
+  background: #cfd8dc;
+  color: #101112;
+  border-color: #cfd8dc;
+}
+
+/* Main Action Button States */
+#bookBtn {
+  transition: all 0.3s ease;
+}
+
+#bookBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+#bookBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 600px) {
+  .photo-gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns on mobile */
+    gap: 8px !important;
+  }
+
+  .slot-picker-btn {
+    padding: 12px !important;
+    font-size: 0.9rem;
+  }
+
+  .container {
+    padding: 15px; /* Prevent text from touching screen edges */
+  }
+}
+
+#slots {
+  min-height: 200px; /* Reserves space while loading */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

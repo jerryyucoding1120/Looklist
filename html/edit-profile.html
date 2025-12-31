@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LookList - Edit Profile</title>
+    <meta name="description" content="Edit your LookList profile information." />
+    <link rel="icon" href="assets/logo1.png" type="image/png" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/logo1.png" />
+    <link rel="shortcut icon" href="assets/logo1.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --background: linear-gradient(135deg, #131415 0%, #09090a 100%);
+            --silver: #cfd8dc;
+            --grey: #424549;
+            --dark-grey: #181a1b;
+            --black: #101112;
+            --card: #23272a;
+            --box-bg: linear-gradient(135deg, #141516 0%, #18191a 100%);
+            --service-bg: linear-gradient(135deg, #0c0d0e 0%, #191a1b 100%);
+            --text: #e0e0e0;
+            --font-header: 'Poppins', sans-serif;
+            --font-body: 'Inter', Arial, sans-serif;
+            --accent: #cfd8dc;
+            --footer-bg: #101112;
+            --box-border: #252728;
+            --button-bg: #23272a;
+            --button-hover-bg: transparent;
+            --button-hover-border: #cfd8dc;
+            --button-hover-text: #cfd8dc;
+            --white: #fff;
+            --error: #ff6b6b;
+            --success: #51cf66;
+        }
+
+        html,
+        body {
+            background: var(--background);
+            color: var(--text);
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-size: 18px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--font-header);
+            font-weight: bold;
+            margin: 0 0 0.5em 0;
+            letter-spacing: 1px;
+            color: var(--silver);
+        }
+
+        .header-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1.1rem 2rem 1.1rem 1rem;
+            background: var(--dark-grey);
+            box-sizing: border-box;
+            gap: 1.4rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 1.5px solid var(--box-border);
+        }
+
+        .logo-img {
+            height: 42px;
+            width: auto;
+            border-radius: 12px;
+            border: 2px solid var(--box-border);
+        }
+
+        .header-title {
+            font-family: var(--font-header);
+            font-size: 1.9rem;
+            font-weight: bold;
+            color: var(--silver);
+            margin-right: auto;
+            letter-spacing: 1.5px;
+        }
+
+        .home-link {
+            color: var(--silver);
+            font-family: var(--font-header);
+            font-weight: bold;
+            font-size: 1.18rem;
+            text-decoration: none;
+            background: var(--button-bg);
+            border: 2px solid transparent;
+            border-radius: 24px;
+            padding: 0.32em 1.25em;
+            cursor: pointer;
+            transition: color 0.18s, border-color 0.18s, background 0.18s;
+        }
+
+        .home-link:hover,
+        .home-link:focus {
+            color: var(--button-hover-text);
+            background: var(--button-hover-bg);
+            border-color: var(--button-hover-border);
+        }
+
+        .show-mobile {
+            display: none;
+        }
+
+        .hide-mobile {
+            display: inline-block;
+        }
+
+        @media (max-width: 600px) {
+            .show-mobile {
+                display: inline-block;
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+
+            .header-bar .home-link {
+                display: none !important;
+            }
+        }
+
+        .header-bar .nav-desktop {
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .header-bar .nav-desktop {
+                display: inline-block;
+            }
+        }
+
+        .content {
+            max-width: 700px;
+            margin: 2rem auto 3rem;
+            padding: 2rem 1.25rem;
+            line-height: 1.65;
+            background: var(--box-bg);
+            border-radius: 20px;
+            border: 2px solid var(--box-border);
+            box-shadow: 0 4px 32px rgba(44, 46, 48, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--silver);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--card);
+            border: 2px solid var(--box-border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(207, 216, 220, 0.1);
+        }
+
+        .form-input:disabled {
+            background: var(--dark-grey);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: var(--font-body);
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-top: 0.35rem;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--button-bg);
+            color: var(--silver);
+            border: 2px solid var(--box-border);
+            padding: 0.8rem 1.8rem;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+            font-size: 1rem;
+            font-family: var(--font-header);
+            display: inline-block;
+        }
+
+        .btn:hover,
+        .btn:focus {
+            background: var(--button-hover-bg);
+            color: var(--button-hover-text);
+            border-color: var(--button-hover-border);
+            box-shadow: 0 6px 24px rgba(44, 46, 48, 0.22);
+            outline: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--black);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--white);
+            color: var(--black);
+            border-color: var(--white);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border-color: var(--box-border);
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 2px solid var(--error);
+            color: var(--error);
+        }
+
+        .alert-success {
+            background: rgba(81, 207, 102, 0.1);
+            border: 2px solid var(--success);
+            color: var(--success);
+        }
+
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                padding: 1.1rem;
+            }
+
+            body {
+                padding-bottom: calc(76px + env(safe-area-inset-bottom));
+            }
+
+            footer {
+                padding-bottom: calc(2rem + 64px + env(safe-area-inset-bottom));
+            }
+
+            .mobile-bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 64px;
+                padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) 8px;
+                background: var(--footer-bg);
+                border-top: 1px solid var(--box-border);
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .mobile-bottom-nav .nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+                text-decoration: none;
+                color: var(--silver);
+                font-size: 0.72rem;
+                padding: 0.25rem 0.5rem;
+                min-width: 64px;
+            }
+
+            .mobile-bottom-nav .nav-item:hover,
+            .mobile-bottom-nav .nav-item:focus {
+                color: var(--white);
+            }
+
+            .mobile-bottom-nav .nav-icon {
+                width: 42px;
+                height: 42px;
+                object-fit: contain;
+                border-radius: 6px;
+                border: 1px solid var(--box-border);
+                background: var(--button-bg);
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        footer {
+            width: 100%;
+            background: var(--footer-bg);
+            color: var(--silver);
+            text-align: center;
+            padding: 2rem 1rem 1rem 1rem;
+            margin-top: 3rem;
+            letter-spacing: 0.5px;
+            font-size: 1.05rem;
+            border-top: 1px solid var(--box-border);
+            box-shadow: 0 -2px 16px rgba(44, 46, 48, 0.08);
+        }
+
+        .footer-nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-btn {
+            background: none;
+            border: 2px solid transparent;
+            color: var(--silver);
+            font-family: var(--font-body);
+            font-size: 1.07rem;
+            font-weight: 500;
+            padding: 0.2em 0.7em;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+            text-decoration: underline;
+        }
+
+        a {
+            color: var(--silver);
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        a:hover,
+        a:focus {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+    </style>
+    <link rel="stylesheet" href="assets/css/background.css" />
+</head>
+
+<body>
+    <div id="loading-screen" style="text-align: center; margin-top: 50px;">
+        <h1>Loading... please wait...</h1>
+    </div>
+
+    <div id="secret-box" style="display: none;">
+
+        <header class="header-bar">
+            <a href="index.html"><img src="assets/logo1.png" alt="LookList Logo" class="logo-img" /></a>
+            <span class="header-title">Looklist</span>
+            <a href="index.html" class="home-link hide-mobile">Home</a>
+            <a href="services.html" class="home-link nav-desktop">Services</a>
+            <a href="bookings.html" class="home-link nav-desktop">Bookings</a>
+            <a href="messages.html" class="home-link nav-desktop">Messages</a>
+            <a href="profile.html" class="home-link nav-desktop">Profile</a>
+            <a href="signin.html" class="home-link nav-desktop" data-auth="signin">Sign in</a>
+            <a href="services.html" class="home-link show-mobile">Services</a>
+            <a href="bookings.html" class="home-link show-mobile">Bookings</a>
+            <a href="messages.html" class="home-link show-mobile">Messages</a>
+            <a href="profile.html" class="home-link show-mobile">Profile</a>
+        </header>
+
+        <main class="content">
+            <h2>Edit Profile</h2>
+            <p style="color: var(--accent); margin-bottom: 2rem;">Update your personal information</p>
+
+            <div id="error-alert" class="alert alert-error"></div>
+            <div id="success-alert" class="alert alert-success"></div>
+
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label for="full-name" class="form-label">Full Name *</label>
+                    <input type="text" id="full-name" name="full_name" class="form-input"
+                        placeholder="Enter your full name" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" disabled />
+                    <span class="form-hint">Email cannot be changed for security reasons</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="+44 1234 567890" />
+                    <span class="form-hint">Optional - Include country code</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio" class="form-label">Bio</label>
+                    <textarea id="bio" name="bio" class="form-textarea"
+                        placeholder="Tell us a bit about yourself..."></textarea>
+                    <span class="form-hint">Optional - A short description about you</span>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" id="save-btn">
+                        Save Changes
+                    </button>
+                    <a href="profile.html" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <nav class="footer-nav">
+                <a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
+                <a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
+                <a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
+            </nav>
+            <div>Copyright 2025 LookList. All rights reserved.</div>
+        </footer>
+
+        <nav class="mobile-bottom-nav" aria-label="Primary">
+            <a class="nav-item" href="index.html">
+                <img class="nav-icon" src="assets/home.png" alt="" aria-hidden="true" />
+                <span class="nav-label">Home</span>
+            </a>
+            <a class="nav-item" href="services.html">
+                <img class="nav-icon" src="assets/service.png" alt="" aria-hidden="true" />
+                <span class="nav-label">Services</span>
+            </a>
+            <a class="nav-item" href="bookings.html">
+                <img class="nav-icon" src="assets/bookings.png" alt="" aria-hidden="true" />
+                <span class="nav-label">Bookings</span>
+            </a>
+            <a class="nav-item" href="messages.html">
+                <img class="nav-icon" src="assets/messages.png" alt="" aria-hidden="true" />
+                <span class="nav-label">Messages</span>
+            </a>
+            <a class="nav-item" href="profile.html" aria-current="page">
+                <img class="nav-icon" src="assets/profile.png" alt="" aria-hidden="true" />
+                <span class="nav-label">Profile</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <script type="module" src="edit-profile-page.js"></script>
+</body>
+
+</html>

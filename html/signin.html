@@ -297,6 +297,8 @@
   </header>
 
   <main>
+    <div id="redirect-message" style="color: #cfd8dc; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; border: 1px solid var(--box-border);"></div>
+    
     <h1>Sign in</h1>
     <p class="lead">Welcome back. Enter your credentials to access your bookings and messages.</p>
     <form id="signin-form" novalidate>
@@ -355,6 +357,19 @@
 
   <script type="module" src="auth.js"></script>
   <script type="module" src="signin-page.js"></script>
+  <script type="module">
+  // Wait for the DOM to be ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('msg')) {
+      const msgEl = document.getElementById('redirect-message');
+      if (msgEl) {
+        msgEl.textContent = params.get('msg');
+        msgEl.style.display = 'block';
+      }
+    }
+  });
+</script>
 </body>
 </html>
 

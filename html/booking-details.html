@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LookList - Booking Details</title>
+  <link rel="icon" href="assets/logo1.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/background.css"/>
+  <style>
+    /* ... (KEEP YOUR EXISTING CSS HERE) ... */
+    /* Copy the exact CSS from your file if needed, 
+       but make sure to KEEP the :root and general styles */
+    :root {
+      --background: linear-gradient(135deg, #131415 0%, #09090a 100%);
+      --silver: #cfd8dc;
+      --grey: #424549;
+      --dark-grey: #181a1b;
+      --black: #101112;
+      --card: #23272a;
+      --box-bg: linear-gradient(135deg, #141516 0%, #18191a 100%);
+      --service-bg: linear-gradient(135deg, #0c0d0e 0%, #191a1b 100%);
+      --text: #e0e0e0;
+      --font-header: 'Poppins', sans-serif;
+      --font-body: 'Inter', Arial, sans-serif;
+      --accent: #cfd8dc;
+      --footer-bg: #101112;
+      --box-border: #252728;
+      --button-bg: #23272a;
+      --button-hover-bg: transparent;
+      --button-hover-border: #cfd8dc;
+      --button-hover-text: #cfd8dc;
+      --white: #fff;
+    }
+    /* ... The rest of your CSS ... */
+    html, body { background: var(--background); color: var(--text); font-family: var(--font-body); margin: 0; padding: 0; min-height: 100vh; font-size: 18px; -webkit-font-smoothing: antialiased; }
+    .header-bar { width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 1.1rem 2rem 1.1rem 1rem; background: var(--dark-grey); box-sizing: border-box; gap: 1.4rem; border-bottom: 1.5px solid var(--box-border); }
+    .logo-img { height: 42px; width: auto; border-radius: 12px; border: 2px solid var(--box-border); }
+    .header-title { font-family: var(--font-header); font-size: 1.9rem; font-weight: bold; color: var(--silver); margin-right: auto; letter-spacing: 1.5px; }
+    .home-link { color: var(--silver); font-family: var(--font-header); font-weight: bold; font-size: 1.18rem; text-decoration: none; background: var(--button-bg); border: 2px solid transparent; border-radius: 24px; padding: 0.32em 1.25em; transition: all 0.18s; }
+    .home-link:hover { color: var(--button-hover-text); background: var(--button-hover-bg); border-color: var(--button-hover-border); }
+    .nav-desktop { display: none; }
+    @media (min-width: 1024px) { .nav-desktop { display: inline-block; } }
+    
+    .content { max-width: 900px; margin: 2rem auto 3rem; padding: 2rem 1.25rem; background: var(--box-bg); border-radius: 20px; border: 2px solid var(--box-border); box-shadow: 0 4px 32px rgba(44,46,48,0.15); }
+    .status-banner { padding: 1rem; border-radius: 12px; text-align: center; font-family: var(--font-header); font-weight: 700; margin-bottom: 2rem; border: 1px solid var(--accent); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .detail-item label { display: block; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .detail-item span { font-size: 1.1rem; font-weight: 500; color: var(--white); }
+
+    /* Button styles */
+    .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.2s; font-family: var(--font-body); }
+    .btn-cancel { background-color: rgba(244, 67, 54, 0.1); color: #f44336; border: 1px solid #f44336; }
+    
+    /* Footer & Mobile Nav */
+    footer { width: 100%; background: var(--footer-bg); color: var(--silver); text-align: center; padding: 2rem 1rem 1rem 1rem; margin-top: 3rem; letter-spacing: 0.5px; font-size: 1.05rem; border-top: 1px solid var(--box-border); }
+    .footer-nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .footer-btn { background: none; border: 2px solid transparent; color: var(--silver); font-family: var(--font-body); font-size: 1.07rem; font-weight: 500; padding: 0.2em 0.7em; cursor: pointer; border-radius: 6px; transition: all 0.18s; text-decoration: underline; }
+    .mobile-bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; height: 64px; padding: 8px; background: var(--footer-bg); border-top: 1px solid var(--box-border); display: none; justify-content: space-around; align-items: center; z-index: 1000; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--silver); font-size: 0.72rem; }
+    .nav-icon { width: 42px; height: 42px; object-fit: contain; border-radius: 6px; background: var(--button-bg); border: 1px solid var(--box-border); }
+    
+    @media (max-width: 600px) {
+      .header-bar .home-link { display: none !important; }
+      .mobile-bottom-nav { display: flex; }
+      body { padding-bottom: 100px; }
+      footer { padding-bottom: 100px; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header-bar">
+    <a href="index.html"><img src="assets/logo1.png" alt="Logo" class="logo-img" /></a>
+    <span class="header-title">Looklist</span>
+    <a href="index.html" class="home-link nav-desktop">Home</a>
+    <a href="bookings.html" class="home-link">Back</a>
+  </header>
+
+  <main class="content">
+    <div id="booking-detail-view">
+      <div id="status-banner" class="status-banner">Loading...</div>
+      
+      <h1 id="service-name">Service Name</h1>
+
+      <div class="detail-grid">
+        <div class="detail-item"><label>Date & Time</label><span id="booking-time">N/A</span></div>
+        <div class="detail-item"><label>Price</label><span id="booking-price">N/A</span></div>
+        <div class="detail-item"><label>Location</label><span id="booking-location">N/A</span></div>
+        <div class="detail-item"><label>Duration</label><span id="booking-duration">N/A</span></div>
+      </div>
+
+      <div id="detail-actions" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        </div>
+    </div>
+  </main>
+
+  <footer>
+    <nav class="footer-nav">
+      <a href="terms.html"><button class="footer-btn">Terms of Use</button></a>
+      <a href="privacy.html"><button class="footer-btn">Privacy Policy</button></a>
+      <a href="cookies.html"><button class="footer-btn">Cookie Policy</button></a>
+    </nav>
+    <div>Copyright 2025 LookList. All rights reserved.</div>
+  </footer>
+
+  <nav class="mobile-bottom-nav">
+    <a class="nav-item" href="index.html"><img class="nav-icon" src="assets/home.png" alt="" /><span>Home</span></a>
+    <a class="nav-item" href="bookings.html"><img class="nav-icon" src="assets/bookings.png" alt="" /><span>Bookings</span></a>
+    <a class="nav-item" href="messages.html"><img class="nav-icon" src="assets/messages.png" alt="" /><span>Messages</span></a>
+  </nav>
+
+  <script type="module" src="booking-detail-page.js"></script>
+</body>
+</html>

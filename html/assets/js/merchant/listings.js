@@ -26,18 +26,18 @@ if (!window.__looklist_listingsConfigLogged) {
  */
 async function ensureProfileExists(sb, user) {
   if (!user?.id) return;
-  
+
   const { error } = await sb
     .from('profiles')
     .upsert(
-      { 
+      {
         id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || null,
         avatar_url: user.user_metadata?.avatar_url || null
       },
       { onConflict: 'id' }
     );
-  
+
   if (error) {
     console.warn('ensureProfileExists failed:', error.message);
     // Don't throw - some environments may have RLS blocking this.
@@ -47,9 +47,20 @@ async function ensureProfileExists(sb, user) {
 
 main();
 
-async function main(){
+async function main() {
   currentUser = await requireUser(); if (!currentUser) return;
   if (signoutBtn) signoutBtn.onclick = signOut;
+
+  // Update header Sign in link to Sign Out
+  const signInLinks = document.querySelectorAll('[data-auth="signin"]');
+  signInLinks.forEach((el) => {
+    el.textContent = 'Sign Out';
+    el.setAttribute('href', '#');
+    el.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await signOut();
+    });
+  });
 
   await refreshMyListings(currentUser.id);
 
@@ -89,7 +100,7 @@ async function main(){
       } else {
         // Create - ensure profile exists first
         await ensureProfileExists(sb, currentUser);
-        
+
         payload.owner = currentUser.id;
         const { error } = await sb.from('listings').insert(payload);
         if (error) {
@@ -138,10 +149,10 @@ async function main(){
     input.disabled = true;
     const status = document.querySelector(`#imgs-${cssEscape(listingId)} .upload-status`);
     if (status) status.textContent = `Uploading ${files.length} file(s)…`;
-    
+
     const results = await uploadListingImages(listingId, files);
     const errs = results.filter(r => r.error);
-    
+
     if (status) {
       if (errs.length === 0) {
         status.textContent = `✓ Successfully uploaded ${files.length} photo(s). Changes are immediately visible to customers.`;
@@ -158,7 +169,7 @@ async function main(){
         status.style.color = '';
       }, 3000);
     }
-    
+
     input.value = '';
     input.disabled = false;
     await renderListingImages(listingId);
@@ -180,7 +191,7 @@ async function main(){
   });
 }
 
-function resetFormToCreate(){
+function resetFormToCreate() {
   form.reset();
   form.querySelector('[name="listing_id"]').value = '';
   formTitle.textContent = 'Create Listing';
@@ -188,7 +199,7 @@ function resetFormToCreate(){
   cancelEditBtn.classList.add('hidden');
 }
 
-function loadListingIntoForm(l){
+function loadListingIntoForm(l) {
   form.querySelector('[name="listing_id"]').value = l.id;
   form.querySelector('[name="name"]').value = l.name || '';
   form.querySelector('[name="category"]').value = l.category || 'hair';
@@ -203,13 +214,13 @@ function loadListingIntoForm(l){
   cancelEditBtn.classList.remove('hidden');
 }
 
-async function refreshMyListings(userId){
+async function refreshMyListings(userId) {
   if (list) list.innerHTML = 'Loading…';
   const { data, error } = await sb
     .from('listings')
     .select('*')
     .eq('owner', userId)
-    .order('created_at', { ascending:false });
+    .order('created_at', { ascending: false });
   if (error) { list.textContent = error.message; return; }
   if (!data?.length) { list.innerHTML = '<li class="muted">No listings yet. Create one above.</li>'; return; }
 
@@ -221,14 +232,14 @@ async function refreshMyListings(userId){
   }
 }
 
-function renderListingItem(l){
+function renderListingItem(l) {
   return `
     <li id="listing-${escapeHtml(l.id)}">
       <div class="listing-head">
         <div class="row" style="align-items:center">
           <b>${escapeHtml(l.name)}</b>
           <small class="muted">${escapeHtml(l.category)}</small>
-          <small class="muted">${escapeHtml(l.city||'')}</small>
+          <small class="muted">${escapeHtml(l.city || '')}</small>
           <small>Active: ${l.active ? 'Yes' : 'No'}</small>
         </div>
         <div class="row">
@@ -257,7 +268,7 @@ function renderListingItem(l){
   `;
 }
 
-async function renderListingImages(listingId){
+async function renderListingImages(listingId) {
   const container = document.querySelector(`#imgs-${cssEscape(listingId)} .thumbs`);
   const status = document.querySelector(`#imgs-${cssEscape(listingId)} .upload-status`);
   if (!container) return;
@@ -305,13 +316,13 @@ document.addEventListener('drop', async (e) => {
   const listingId = zone.getAttribute('data-drop');
   const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
   if (!files.length) return;
-  
+
   const status = zone.querySelector('.upload-status');
   if (status) status.textContent = `Uploading ${files.length} file(s)…`;
-  
+
   const results = await uploadListingImages(listingId, files);
   const errs = results.filter(r => r.error);
-  
+
   if (status) {
     if (errs.length === 0) {
       status.textContent = `✓ Successfully uploaded ${files.length} photo(s). Visible to customers now!`;
@@ -325,12 +336,12 @@ document.addEventListener('drop', async (e) => {
       status.style.color = '';
     }, 3000);
   }
-  
+
   await renderListingImages(listingId);
 });
 
 /* Utils */
-function escapeHtml(s){ return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
-function escapeAttr(s){ return String(s).replace(/"/g, '&quot;'); }
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
 // CSS.escape polyfill-ish
-function cssEscape(s){ return String(s).replace(/[^a-zA-Z0-9_-]/g, m => '\\' + m); }
+function cssEscape(s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, m => '\\' + m); }

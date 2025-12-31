@@ -1,147 +1,273 @@
 import { authInit, signOut } from './auth.js';
-import {
-  listMyThreads,
-  listLastMessagesForThreads,
-  getProfilesMany,
-} from './api.js';
+import { sp, getProfilesMany } from './api.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadMessages().catch((err) => console.error('[Messages] init', err));
-});
+(async function () {
+    const { user } = await authInit({ requireAuth: true });
+    toggleHeaderLinks(user);
 
-function toggleHeaderLinks(user) {
-  const links = document.querySelectorAll('[data-auth="signin"]');
-  if (!links.length) return;
+    // If auth failed, authInit handles redirect if requireAuth is true.
 
-  links.forEach((el) => {
-    if (user) {
-      el.textContent = 'Sign Out';
-      el.onclick = (event) => {
-        event.preventDefault();
-        signOut();
-      };
-      el.setAttribute('href', '#');
-    } else {
-      el.textContent = 'Sign in';
-      el.onclick = null;
-      el.setAttribute('href', 'signin.html');
-    }
-  });
-}
+    // If auth failed, authInit handles redirect if requireAuth is true.
+    // However, sp() might need clients ready, which authInit ensures.
 
-const formatDate = (iso) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-};
+    const FUNCTION_BASE = "https://rgzdgeczrncuxfkyuxf.supabase.co/functions/v1";
 
-const snippet = (text, max = 90) => {
-  if (!text) return '';
-  const trimmed = String(text).trim().replace(/\s+/g, ' ');
-  return trimmed.length > max ? `${trimmed.slice(0, max - 1)}...` : trimmed;
-};
+    const listEl = document.querySelector('.thread-list');
+    const noteEl = document.querySelector('.content > .note');
+    if (noteEl) noteEl.style.display = 'none';
 
-export async function loadMessages() {
-  const listEl = document.querySelector('.thread-list');
-  const noteEl = document.querySelector('.note');
-  if (!listEl) return;
+    if (!listEl) return;
 
-  const { user } = await authInit({ requireAuth: true });
-  toggleHeaderLinks(user);
-  if (!user) {
-    if (noteEl) noteEl.textContent = 'Sign in to view and reply to your conversations.';
-    return;
-  }
-
-  try {
-    if (noteEl) noteEl.textContent = 'Loading your conversations...';
-
-    const threads = await listMyThreads();
-    const myId = user.id;
-
-    const threadIds = threads.map((t) => t.id);
-    const messages = threadIds.length
-      ? await listLastMessagesForThreads(threadIds)
-      : [];
-
-    const lastByThread = new Map();
-    for (const message of messages) {
-      if (!lastByThread.has(message.thread_id)) {
-        lastByThread.set(message.thread_id, message);
-      }
+    function el(html) {
+        const t = document.createElement('template');
+        t.innerHTML = html.trim();
+        return t.content.firstElementChild;
     }
 
-    const otherIds = Array.from(
-      new Set(
-        threads
-          .map((t) => (t.customer_id === myId ? t.merchant_id : t.customer_id))
-          .filter(Boolean),
-      ),
-    );
-    const profiles = otherIds.length ? await getProfilesMany(otherIds) : [];
-    const profileById = new Map(profiles.map((p) => [p.id, p]));
-
-    listEl.innerHTML = '';
-    if (noteEl) noteEl.textContent = '';
-
-    if (!threads.length) {
-      const empty = document.createElement('div');
-      empty.className = 'note';
-      empty.textContent = 'No conversations yet.';
-      listEl.appendChild(empty);
-      return;
+    function timeAgo(d) {
+        const now = new Date();
+        const diff = (now - new Date(d)) / 1000;
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return new Date(d).toLocaleDateString();
     }
 
-    for (const thread of threads) {
-      const last = lastByThread.get(thread.id) || null;
-      const otherId = thread.customer_id === myId ? thread.merchant_id : thread.customer_id;
-      const other = profileById.get(otherId);
-      const displayName =
-        other?.full_name ||
-        other?.name ||
-        other?.username ||
-        other?.display_name ||
-        'Conversation';
+    async function fetchThreads() {
+        const client = await sp();
+        const q1 = client
+            .from('threads')
+            .select('*')
+            .or(`customer_id.eq.${user.id},merchant_id.eq.${user.id}`)
+            .order('created_at', { ascending: false });
 
-      const anchor = document.createElement('a');
-      anchor.href = '#';
-      anchor.className = 'thread';
-      anchor.setAttribute('role', 'listitem');
-      anchor.setAttribute('aria-label', `Chat with ${displayName}`);
-
-      const avatar = document.createElement('img');
-      avatar.className = 'avatar';
-      avatar.src = 'assets/profile.png';
-      avatar.alt = '';
-      avatar.setAttribute('aria-hidden', 'true');
-
-      const textWrap = document.createElement('div');
-      const title = document.createElement('p');
-      title.className = 'thread-title';
-      title.textContent = displayName;
-      const body = document.createElement('p');
-      body.className = 'thread-snippet';
-      body.textContent = last ? snippet(last.body) : 'No messages yet.';
-      textWrap.appendChild(title);
-      textWrap.appendChild(body);
-
-      const meta = document.createElement('div');
-      meta.className = 'thread-meta';
-      meta.textContent = last ? formatDate(last.created_at) : formatDate(thread.created_at);
-
-      anchor.appendChild(avatar);
-      anchor.appendChild(textWrap);
-      anchor.appendChild(meta);
-
-      anchor.addEventListener('click', (event) => {
-        event.preventDefault();
-        alert(`Open thread ${thread.id} (detail view not implemented yet).`);
-      });
-
-      listEl.appendChild(anchor);
+        const { data: threads, error } = await q1;
+        if (error) throw error;
+        return threads || [];
     }
-  } catch (error) {
-    console.error('[Messages] load', error);
-    if (noteEl) noteEl.textContent = 'Failed to load messages. Please try again.';
-  }
-}
+
+    async function fetchLatestMessage(thread_id) {
+        const client = await sp();
+        const { data, error } = await client
+            .from('messages')
+            .select('*')
+            .eq('thread_id', thread_id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+        if (error) throw error;
+        return (data && data[0]) || null;
+    }
+
+    async function fetchBooking(booking_id) {
+        if (!booking_id) return null;
+        const client = await sp();
+        const { data, error } = await client
+            .from('bookings')
+            .select('*')
+            .eq('id', booking_id)
+            .single();
+        if (error) return null;
+        return data;
+    }
+
+    async function respondBooking(booking_id, action) {
+        const client = await sp();
+        const { data: { session } } = await client.auth.getSession();
+        const token = session?.access_token;
+
+        const res = await fetch(`${FUNCTION_BASE}/respond-booking`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'authorization': `Bearer ${token || ''}` },
+            body: JSON.stringify({ booking_id, action, actor_id: user.id })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        return data;
+    }
+
+    async function completeBooking(booking_id) {
+        const client = await sp();
+        const { data: { session } } = await client.auth.getSession();
+        const token = session?.access_token;
+
+        const res = await fetch(`${FUNCTION_BASE}/complete-booking`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'authorization': `Bearer ${token || ''}` },
+            body: JSON.stringify({ booking_id, actor_id: user.id })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        return data;
+    }
+
+    async function render() {
+        listEl.innerHTML = '<div class="note">Loading conversations...</div>';
+
+        try {
+            const threads = await fetchThreads();
+            if (!threads.length) {
+                listEl.innerHTML = '<div class="note">No conversations yet.</div>';
+                return;
+            }
+
+            // Collect all other user IDs to fetch profiles in batch
+            const otherUserIds = threads.map(t => {
+                return user.id === t.customer_id ? t.merchant_id : t.customer_id;
+            }).filter(Boolean);
+
+            // Fetch all profiles at once for better performance
+            // Always fetch fresh data from database (no caching)
+            const profiles = otherUserIds.length ? await getProfilesMany(otherUserIds) : [];
+            const profileById = new Map(profiles.map(p => [p.id, p]));
+
+            // For the current user, always use the latest data from auth
+            // This ensures their own name is always up-to-date even if profiles table is stale
+            if (user.user_metadata?.full_name) {
+                profileById.set(user.id, {
+                    id: user.id,
+                    full_name: user.user_metadata.full_name,
+                    phone: user.user_metadata.phone,
+                    bio: user.user_metadata.bio
+                });
+            }
+
+            listEl.innerHTML = '';
+            for (const t of threads) {
+                const latest = await fetchLatestMessage(t.id);
+                const booking = latest?.booking_id ? await fetchBooking(latest.booking_id) : null;
+                const otherId = user.id === t.customer_id ? t.merchant_id : t.customer_id;
+
+                const summary = latest?.content || latest?.body || '—'; // Handle content or body
+                const when = latest?.created_at || t.created_at;
+
+                // Build the link to the MESSAGE THREAD page
+                const threadUrl = `message-thread.html?id=${t.id}`;
+
+                // Get user name from profiles, fallback to 'User'
+                const profile = profileById.get(otherId);
+                const displayName = profile?.full_name || profile?.name || 'User';
+
+                // Note: We use a div with onclick instead of an anchor to allow nested buttons
+                const node = el(`
+                    <div class="thread" role="button" tabindex="0" style="cursor: pointer;">
+                        <img class="avatar" src="assets/profile.png" alt="" aria-hidden="true"/>
+                        <div>
+                            <div class="thread-title">${displayName}</div>
+                            <p class="thread-snippet">${summary}</p>
+                        </div>
+                        <div class="thread-meta">${timeAgo(when)}</div>
+                    </div>
+                `);
+
+                // Add click handler for navigation
+                node.onclick = (e) => {
+                    // Don't navigate if clicking on something interactive inside
+                    if (e.target.closest('button') || e.target.closest('a')) return;
+                    window.location.href = threadUrl;
+                };
+
+
+                // Add booking actions if pending
+                if (booking && booking.status === 'pending') {
+                    const actions = document.createElement('div');
+                    actions.style.marginLeft = 'auto';
+                    actions.style.display = 'flex';
+                    actions.style.gap = '8px';
+                    // Prevent clicking the row link when clicking buttons
+                    actions.onclick = (e) => e.preventDefault();
+
+                    if (user.id === booking.merchant_id) {
+                        const accept = el('<button class="home-link">Accept</button>');
+                        const decline = el('<button class="home-link">Decline</button>');
+                        accept.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            accept.disabled = decline.disabled = true;
+                            try { await respondBooking(booking.id, 'accept'); await render(); }
+                            catch (err) { alert(err.message); accept.disabled = decline.disabled = false; }
+                        };
+                        decline.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            accept.disabled = decline.disabled = true;
+                            try { await respondBooking(booking.id, 'decline'); await render(); }
+                            catch (err) { alert(err.message); accept.disabled = decline.disabled = false; }
+                        };
+                        actions.appendChild(accept);
+                        actions.appendChild(decline);
+                    } else if (user.id === booking.customer_id) {
+                        const cancel = el('<button class="home-link">Cancel</button>');
+                        cancel.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            cancel.disabled = true;
+                            try { await respondBooking(booking.id, 'cancel'); await render(); }
+                            catch (err) { alert(err.message); cancel.disabled = false; }
+                        };
+                        actions.appendChild(cancel);
+                    }
+                    node.appendChild(actions);
+                } else if (booking && booking.status === 'confirmed' && user.id === booking.customer_id) {
+                    const start = new Date(booking.start_time);
+                    if (Date.now() >= +start) {
+                        const done = el('<button class="home-link">Mark complete</button>');
+                        done.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            done.disabled = true;
+                            try { await completeBooking(booking.id); await render(); }
+                            catch (err) { alert(err.message); done.disabled = false; }
+                        };
+                        // Prevent clicking row
+                        done.style.marginLeft = "auto";
+                        done.onclick = (e) => {
+                            e.preventDefault(); e.stopPropagation();
+                            // ... logic
+                        };
+                        // Re-attach logic properly
+                        const realDone = el('<button class="home-link" style="margin-left: auto;">Mark complete</button>');
+                        realDone.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            realDone.disabled = true;
+                            try { await completeBooking(booking.id); await render(); }
+                            catch (err) { alert(err.message); realDone.disabled = false; }
+                        };
+                        node.appendChild(realDone);
+                    }
+                }
+
+                listEl.appendChild(node);
+            }
+        } catch (err) {
+            console.error(err);
+            listEl.innerHTML = '<div class="note">Failed to load messages.</div>';
+        }
+    }
+
+    function toggleHeaderLinks(user) {
+        const links = document.querySelectorAll('[data-auth="signin"]');
+        if (!links.length) return;
+
+        links.forEach((el) => {
+            if (user) {
+                el.textContent = 'Sign Out';
+                el.onclick = (event) => {
+                    event.preventDefault();
+                    signOut();
+                };
+                el.setAttribute('href', '#');
+            } else {
+                el.textContent = 'Sign in';
+                el.onclick = null;
+                el.setAttribute('href', 'signin.html');
+            }
+        });
+    }
+
+
+    render().catch(err => {
+        console.error(err);
+        listEl.innerHTML = '<div class="note">Failed to load messages.</div>';
+    });
+})();
