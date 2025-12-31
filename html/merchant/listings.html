@@ -591,6 +591,14 @@
   </nav>
 
   <script type="module" src="../assets/js/merchant/listings.js"></script>
+  <script type="module">
+  import { initMerchantListingsRealtime } from './merchant-listings-realtime.js';
+  
+  // Initialize realtime when page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    initMerchantListingsRealtime();
+  });
+</script>
 </body>
 
 </html>
